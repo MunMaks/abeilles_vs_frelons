@@ -18,6 +18,10 @@ fichier.o: $(REG)fichier.c $(REG)fichier.h
 
 game.o: $(REG)game.c $(REG)game.h
 
+abeille.o: $(REG)abeille.c $(REG)abeille.h
+
+frelon.o: $(REG)frelon.c $(REG)frelon.h
+
 %.o: $(REG)%.c
 	$(CC) -c $< $(CFLAGS)
 
