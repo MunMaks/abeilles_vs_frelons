@@ -1,0 +1,1 @@
+// la declaration des fonction pour le travail avec les fichiers
