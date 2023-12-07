@@ -1,8 +1,8 @@
 CC = clang
-CFLAGS =-std=c17 -pedantic -Wall
+CFLAGS = -std=c17 -pedantic -Wall
 LDFLAGS = 
-OBJ = fichier.o game.o algo.o option.o main.o
-EXE = JO
+OBJ = fichier.o game.o algo.o option.o main.o frelon.o abeille.o
+EXE = AVSF
 REG = src/
 
 $(EXE): $(OBJ)
