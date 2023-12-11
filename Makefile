@@ -26,7 +26,7 @@ frelon.o: $(REG)frelon.c $(REG)frelon.h
 	$(CC) -c $< $(CFLAGS)
 
 clean:
-	rm -f *.o
+	rm -r ./*.o
 
 mrproper: clean
 	rm -f $(EXE)
