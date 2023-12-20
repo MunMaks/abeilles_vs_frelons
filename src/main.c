@@ -39,15 +39,12 @@
 #define RECOLTE 'p'
 
 
-// Les temps necessaires a la production :
+// Les temps necessaires a la production abeilles :
 #define TREINEA 8
-#define TREINEF 8
 #define TOUVRIERE 2
 #define TGUERRIERE 4
 #define TESCADRON 6
-#define TFRELON 5
 #define TRECOLTE 4
-
 
 // Les couts necessaires a la production abeilles :
 #define CRUCHE 10
@@ -55,6 +52,12 @@
 #define COUVRIERE 3
 #define CGUERRIERE 5
 #define CESCADRON 6
+
+
+
+// Les temps necessaires a la production frelons :
+#define TREINEF 8
+#define TFRELON 5
 
 // Les couts necessaires a la production frelons :
 #define CNID 10
@@ -68,7 +71,6 @@
 #define FGUERRIERE 5
 #define FESCADRON 12
 #define FFRELON 8
-
 
 
 
@@ -118,8 +120,11 @@ void free_frelons(){
 
 void initialisation_abeille(void){
 	// il y a une ruche, une reine, une ouvrière et une guerrière 
-	
-	if (NULL == (Unite *))
+	Unite * lst = NULL;
+
+	if (NULL == (lst = (Unite *) malloc(Unite)) ){
+		fprintf(stderr, "Pas de mémoire\n");
+	}
 }
 
 
