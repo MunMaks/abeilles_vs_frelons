@@ -1,8 +1,8 @@
 CC = clang
-CFLAGS =-std=c17 -pedantic -Wall
+CFLAGS = -std=c17 -pedantic -Wall
 LDFLAGS = 
-OBJ = fichier.o game.o algo.o option.o main.o
-EXE = JO
+OBJ = fichier.o game.o algo.o option.o main.o frelon.o abeille.o
+EXE = AVSF
 REG = src/
 
 $(EXE): $(OBJ)
@@ -18,11 +18,15 @@ fichier.o: $(REG)fichier.c $(REG)fichier.h
 
 game.o: $(REG)game.c $(REG)game.h
 
+abeille.o: $(REG)abeille.c $(REG)abeille.h
+
+frelon.o: $(REG)frelon.c $(REG)frelon.h
+
 %.o: $(REG)%.c
 	$(CC) -c $< $(CFLAGS)
 
 clean:
-	rm -f *.o
+	rm -r ./*.o
 
 mrproper: clean
 	rm -f $(EXE)
