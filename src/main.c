@@ -261,7 +261,6 @@ void libererPlateau(Grille *grille) {
 
 
 
-
 int main(int argc, char *argv[]){
 	Grille *grille = initialiserGrille();
 
