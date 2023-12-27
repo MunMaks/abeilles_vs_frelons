@@ -8,6 +8,10 @@
 // #include <math.h>
 #include <string.h>
 
+
+// Dimensions de la grille en nombre de cases (origine en haut a gauche) :
+// début: (0, 0), fin: (17, 11) 
+
 // PLATEAU
 #define LIGNES 18
 #define COLONNES 12
