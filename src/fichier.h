@@ -1,1 +1,9 @@
-// la declaration des fonction pour le travail avec les fichiers
+#ifndef __FICHIER__
+#define __FICHIER__
+
+#include "bataille.h"
+
+// LES FONCTIONS POUR SAUVGARDER
+
+
+#endif

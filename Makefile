@@ -1,41 +1,60 @@
+# Compiler and flags
 CC = clang
 CFLAGS = -std=c17 -pedantic -Wall
-LDFLAGS = 
-OBJ = fichier.o game.o algo.o option.o main.o frelon.o abeille.o
-EXE = AVSF
-REG = src/
 
-$(EXE): $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
-	
-main.o: $(REG)main.c $(REG)option.h
+# Directories
+SRC_DIR = src
+OBJ_DIR = build
+BIN_DIR = bin
 
-option.o: $(REG)option.c $(REG)option.h $(REG)algo.h
+# Source files
+SRC = $(wildcard $(SRC_DIR)/*.c)
 
-algo.o: $(REG)algo.c $(REG)algo.h $(REG)game.h $(REG)fichier.h
+# Object files
+OBJ = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC))
 
-fichier.o: $(REG)fichier.c $(REG)fichier.h
+# Executable name
+EXE = AF
 
-game.o: $(REG)game.c $(REG)game.h
+# Targets
+all: $(BIN_DIR)/$(EXE)
 
-abeille.o: $(REG)abeille.c $(REG)abeille.h
+$(BIN_DIR)/$(EXE): $(OBJ)
+	$(CC) -o $@ $^ $(CFLAGS)
 
-frelon.o: $(REG)frelon.c $(REG)frelon.h
+$(OBJ_DIR)/main.o: $(SRC_DIR)/main.c $(SRC_DIR)/graphique.h
 
-%.o: $(REG)%.c
-	$(CC) -c $< $(CFLAGS)
+$(OBJ_DIR)/graphique.o: $(SRC_DIR)/graphique.c $(SRC_DIR)/graphique.h $(SRC_DIR)/bataille.h $(SRC_DIR)/fichier.h
 
+$(OBJ_DIR)/bataille.o: $(SRC_DIR)/bataille.c $(SRC_DIR)/bataille.h $(SRC_DIR)/abeille.h $(SRC_DIR)/frelon.h
+
+$(OBJ_DIR)/fichier.o: $(SRC_DIR)/fichier.c $(SRC_DIR)/fichier.h $(SRC_DIR)/bataille.h
+
+$(OBJ_DIR)/abeille.o: $(SRC_DIR)/abeille.c $(SRC_DIR)/abeille.h $(SRC_DIR)/plateau.h
+
+$(OBJ_DIR)/frelon.o: $(SRC_DIR)/frelon.c $(SRC_DIR)/frelon.h $(SRC_DIR)/plateau.h
+
+$(OBJ_DIR)/plateau.o: $(SRC_DIR)/plateau.c $(SRC_DIR)/plateau.h
+
+# Rule to build object files
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+# Clean up
 clean:
-	rm -r ./*.o
+	rm -rf $(OBJ_DIR)
 
+# Full clean, including executable
 mrproper: clean
-	rm -f $(EXE)
+	rm -rf $(BIN_DIR)
 
-install: $(EXE)
-	mkdir bin
-	mv $(EXE) bin/$(EXE)
-	make mrproper
+# Install the executable
+install: $(BIN_DIR)/$(EXE)
+	mkdir -p $(BIN_DIR)
+	mv $(BIN_DIR)/$(EXE) $(BIN_DIR)
 
+# Uninstall the executable
 uninstall: mrproper
-	rm -f bin/$(EXE)
-	rm -rf bin
+	rm -f $(BIN_DIR)/$(EXE)
+
+.PHONY: all clean mrproper install uninstall

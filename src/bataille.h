@@ -1,0 +1,7 @@
+#ifndef __BATAILLE__
+#define __BATAILLE__
+
+// LES FONCTIONS POUR LES BATAILLES
+
+
+#endif

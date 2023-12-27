@@ -1,1 +1,0 @@
-// la declaration des fonctions des algorithmes
