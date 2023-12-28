@@ -44,6 +44,7 @@
 #define CGUERRIERE 5
 #define CESCADRON 6
 
+
 // Les temps necessaires a la production frelons :
 #define TREINEF 8
 #define TFRELON 5
@@ -186,11 +187,11 @@ UListe initialisation_frelons(void);
 
 
 /**
- * @brief Liberer la memoire du plateau
+ * @brief Liberer la memoire du grille
  * 
  * @param grille 
  */
-void libererPlateau(Grille *grille);
+void liberer_Grille(Grille *grille);
 
 /**
  * @brief Initialisation du plateau au debut
@@ -199,6 +200,26 @@ void libererPlateau(Grille *grille);
  */
 Grille *initialiserGrille(void);
 
+
+
+/**
+ * @brief Effectue l'ajout d'un insecte a la fin de la colonie et renvoie 1 si OK, 0 si echec
+ * 
+ * @param colonie 
+ * @param insecte 
+ * @return int 
+ */
+int ajoute_insecte_fin(UListe *colonie, Unite *insecte);  //to do
+
+
+/**
+ * @brief Effectue l'ajout d'une colonie a la fin de la colonie #1 et renvoie 1 si OK, 0 si echec
+ * 
+ * @param colonie_un 
+ * @param colonie_deux 
+ * @return int 
+ */
+int ajoute_colonie_fin(UListe *colonie_un, UListe colonie_deux);
 
 
 #endif

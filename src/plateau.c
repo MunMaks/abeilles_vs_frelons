@@ -84,7 +84,7 @@ Unite *initialisation_guerriere(void) {
     A_Guerriere->type = GUERRIERE;
     A_Guerriere->force = FGUERRIERE;
     A_Guerriere->posx = 0, A_Guerriere->posy = 0;
-    A_Guerriere->destx = 00, A_Guerriere->desty = 0;
+    A_Guerriere->destx = 0, A_Guerriere->desty = 0;
     A_Guerriere->production = 0;
     A_Guerriere->temps = 0;
     A_Guerriere->toursrestant = 0;
@@ -100,8 +100,8 @@ UListe initialisation_abeilles(void){
 	// Camp ABEILLES au debut: 1 ruche, 1 reine, 1 guerrière et 1 ouvrière
 	UListe A_Ruche = initialisation_ruche();
 	Unite *A_Reine = initialisation_reine_abeille();
-	Unite *A_Ouvriere = initialisation_ouvriere();
 	Unite *A_Guerriere = initialisation_guerriere();
+	Unite *A_Ouvriere = initialisation_ouvriere();
 
 	A_Ruche->usuiv = A_Reine;
     A_Ruche->uprec = NULL;
@@ -227,24 +227,42 @@ UListe initialisation_frelons(void){
 
 
 
-void libererPlateau(Grille *grille) {
+void liberer_Grille(Grille *grille) {
+
+    UListe abeilleCourante = grille->abeille;
+    while (abeilleCourante != NULL) {
+        UListe suivant = abeilleCourante->vsuiv;
+        free(abeilleCourante);
+        abeilleCourante = suivant;
+    }
+
+    UListe frelonCourant = grille->frelon;
+    while (frelonCourant != NULL) {
+        UListe suivant = frelonCourant->vsuiv;
+        free(frelonCourant);
+        frelonCourant = suivant;
+    }
+
+    for (int i = 0; i < LIGNES; ++i) {
+        for (int j = 0; j < COLONNES; ++j) {
+            free(grille->plateau[i][j].colonie);
+            free(grille->plateau[i][j].occupant);
+        }
+    }
+
     free(grille);
 }
+
+
 
 Grille *initialiserGrille(void) {
 
     Grille *grille = NULL;
 
     if (NULL == (grille = (Grille *)malloc(sizeof(Grille))) ){
-        fprintf(stderr, "Malloc n'a pas reussi a allouer la memoire, reessayez.\n");
+        fprintf(stderr, "Malloc n'a pas reussi a allouer la memoire pour GRILLE, reessayez.\n");
         return NULL; 	// exit(EXIT_FAILURE);
     }
-
-    grille->tour = 1;
-
-    grille->ressourcesAbeille = 10;		// par defaut 10
-    grille->ressourcesFrelon = 10;		// par defaut 10
-
 
     for (int i = 0; i < LIGNES; ++i) {
         for (int j = 0; j < COLONNES; ++j) {
@@ -253,16 +271,69 @@ Grille *initialiserGrille(void) {
             grille->plateau[i][j].occupant = NULL;
         }
     }
-	
-    grille->abeille = NULL;     // RUCHE -> Reine -> etc
-    grille->frelon = NULL;      // NID -> Reine -> etc
+
+    grille->abeille = NULL;     // RUCHE -> Reine -> Guerriere -> Ouvriere
+    grille->frelon = NULL;      // NID -> Reine -> Frelon_un -> Frelon_deux
 
 	grille->plateau[0][0].colonie = grille->abeille;                        // RUCHE
     grille->plateau[LIGNES - 1][COLONNES - 1].colonie = grille->frelon;     // NID
+
+    grille->tour = 0;   // apres chaque tour on l'incremente
+    grille->ressourcesAbeille = 10;		// par defaut 10
+    grille->ressourcesFrelon = 10;		// par defaut 10
 
     return grille;
 }
 
 
 
+int ajoute_insecte_fin(UListe *colonie, Unite *new_insecte){
+    // On suppose que colonie contient toujours au moins 1 element (Ruche ou Nid)
 
+    if (! (*colonie)){ fprintf(stderr, "Colonie est vide! \n"); return 0; } // Si colonie est vide
+
+    Unite *curr = *colonie; // ce n'est pas obligatoire, mais c'est plus simple
+
+    // Iteration jusqu'a dernier unite qui n'est pas egale a NULL
+    while (curr->usuiv != NULL) { curr = curr->usuiv; }
+    curr->usuiv = new_insecte;
+
+    new_insecte->usuiv = NULL;  // par defaut c'est deja NULL
+    new_insecte->uprec = curr;
+
+    return 1;
+}
+
+
+int ajoute_colonie_fin(UListe *colonie_un, UListe colonie_deux){
+    // retravailler ici
+    // On suppose que colonie contient toujours au moins 1 element (Ruche ou Nid)
+    if (! (*colonie_un)){ // Si colonie_un est vide (par exemple detruite)
+        fprintf(stderr, "Colonie_un est vide! \n");
+        *colonie_un = colonie_deux;
+        return 1; 
+    }
+
+    Unite *curr_un = *colonie_un; // ce n'est pas obligatoire, mais c'est plus simple
+
+    // Iteration jusqu'a dernier unite qui n'est pas egale a NULL
+    while (curr_un->usuiv != NULL) { curr_un = curr_un->usuiv; }
+    curr_un->colsuiv = colonie_deux;
+
+    // pour la lisibilite on peut remplacer "curr_un->colsuiv" par "colonie_deux"
+    curr_un->colsuiv->colsuiv = NULL;       // par defaut c'est deja NULL
+    curr_un->colsuiv->colprec = curr_un;    
+
+    return 1;   // l'ajout bien s'est passe
+}
+
+int suppression_tete_colonie(UListe *colonie, Unite **deleted_insecte){
+    if (! colonie ){ fprintf(stderr, "Colonie est vide! On peut pas supprimer \n"); return 0; }   // Si colonie est vide
+    
+    Unite *curr = *colonie;
+
+}
+
+/* int main(void){
+    return 0;
+} */
