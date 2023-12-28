@@ -7,4 +7,7 @@
 // la declaration des fonctions des options
 
 
+void affiche_etat(void);    // example
+
+
 #endif

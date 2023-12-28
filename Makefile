@@ -14,13 +14,13 @@ SRC = $(wildcard $(SRC_DIR)/*.c)
 OBJ = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC))
 
 # Executable name
-EXE = test
+EXE = AF
 
 # Targets
 all: $(BIN_DIR)/$(EXE)
-
+#mkdir -p $(BIN_DIR)
 $(BIN_DIR)/$(EXE): $(OBJ)
-	mkdir -p $(BIN_DIR)
+	mkdir $(BIN_DIR)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 $(OBJ_DIR)/main.o: $(SRC_DIR)/main.c $(SRC_DIR)/graphique.h
@@ -51,9 +51,11 @@ clean:
 mrproper: clean
 	rm -rf $(BIN_DIR)
 
+
 # Install the executable
+# mkdir -p $(BIN_DIR)
 install: $(BIN_DIR)/$(EXE)
-	mkdir -p $(BIN_DIR)
+	
 	mv $(BIN_DIR)/$(EXE) $(BIN_DIR)
 
 # Uninstall the executable

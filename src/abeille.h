@@ -6,4 +6,15 @@
 
 // LES FONCTIONS pour les abeilles
 
+Unite *creation_Ruche(void);
+
+Unite *creation_Reine_abeille(void);
+
+Unite *creation_ouvriere(void);
+
+Unite *creation_guerriere(void);
+
+Unite *creation_escadron(void);
+
+
 #endif

@@ -6,5 +6,11 @@
 
 // LES FONCTIONS POUR LES BATAILLES
 
+/**
+ * @brief Detecte la victoire des abeilles ou des frelons
+ * 
+ * @return int 
+ */
+int detect_victoire(void);
 
 #endif

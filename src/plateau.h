@@ -11,8 +11,6 @@
 
 // Dimensions de la grille en nombre de cases (origine en haut a gauche) :
 // début: (0, 0), fin: (17, 11) 
-
-// PLATEAU
 #define LIGNES 18
 #define COLONNES 12
 
@@ -64,6 +62,11 @@
 #define FFRELON 8
 
 
+/********************************************************/
+/************** Les structures pour le jeu **************/
+/********************************************************/
+
+
 // La structure Unite :
 typedef struct unite {
 	char camp; 								// ABEILLES ou FRELONS
@@ -96,8 +99,105 @@ typedef struct {
 } Grille;
 
 
-// LES FONCTIONS pour plateau
 
+/********************************************************/
+/************** LES FONCTIONS pour abeille **************/
+/********************************************************/
+
+/**
+ * @brief Initialisation de ruche au debut
+ * 
+ * @return Unite* 
+ */
+Unite *initialisation_ruche(void);
+
+
+/**
+ * @brief Initialisation de reine abeille au debut
+ * 
+ * @return Unite* 
+ */
+Unite *initialisation_reine_abeille(void);
+
+
+/**
+ * @brief Initialisation de ouvriere au debut
+ * 
+ * @return Unite* 
+ */
+Unite *initialisation_ouvriere(void);
+
+
+/**
+ * @brief Initialisation de guerriere au debut
+ * 
+ * @return Unite* 
+ */
+Unite *initialisation_guerriere(void);
+
+
+/**
+ * @brief Initialisation de CAMP ABEILLE
+ * 
+ * @return UListe 
+ */
+UListe initialisation_abeilles(void);
+
+
+/********************************************************/
+/************** LES FONCTIONS pour frelons **************/
+/********************************************************/
+
+/**
+ * @brief Initialisation un nid au debut
+ * 
+ * @return Unite* 
+ */
+Unite *initialisation_nid(void);
+
+
+/**
+ * @brief Initialisation une reine de frelon au debut
+ * 
+ * @return Unite* 
+ */
+Unite *initialisation_reine_frelon(void);
+
+
+/**
+ * @brief Initialisation deux frelons au debut
+ * 
+ * @return Unite* 
+ */
+Unite *initialisation_frelon(void);
+
+
+/**
+ * @brief Initialisation de CAMP FRELON
+ * 
+ * @return UListe 
+ */
+UListe initialisation_frelons(void);
+
+
+/*******************************************************/
+/************** LES FONCTIONS pour grille **************/
+/*******************************************************/
+
+
+/**
+ * @brief Liberer la memoire du plateau
+ * 
+ * @param grille 
+ */
+void libererPlateau(Grille *grille);
+
+/**
+ * @brief Initialisation du plateau au debut
+ * 
+ * @return Grille* 
+ */
+Grille *initialiserGrille(void);
 
 
 

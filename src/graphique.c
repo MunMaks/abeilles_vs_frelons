@@ -1,1 +1,2 @@
-// les options de notre projet
+#include "graphique.h"
+// la partie graphique de notre projet
