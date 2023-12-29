@@ -201,24 +201,64 @@ void liberer_Grille(Grille *grille);
 Grille *initialiserGrille(void);
 
 
-
-/**
- * @brief Effectue l'ajout d'un insecte a la fin de la colonie et renvoie 1 si OK, 0 si echec
- * 
- * @param colonie 
- * @param insecte 
- * @return int 
- */
-int ajoute_insecte_fin(UListe *colonie, Unite *insecte);  //to do
+/*************************************************/
+/************** AJOUT / SUPPRESSION **************/
+/*************************************************/
 
 
 /**
- * @brief Effectue l'ajout d'une colonie a la fin de la colonie #1 et renvoie 1 si OK, 0 si echec
+ * @brief Effectue l'ajout d'une colonie a l'autre (reciproquement), return 1 succes ou 0 si echec
  * 
  * @param colonie_un 
  * @param colonie_deux 
  * @return int 
  */
+int ajoute_colonie_fin(UListe *colonie_un, UListe colonie_deux);
+
+
+/**
+ * @brief Effectue l'ajout d'un insecte a la fin de la colonie, return 1 succes ou 0 si echec
+ * 
+ * @param colonie 
+ * @param new_insecte 
+ * @return int 
+ */
+int ajoute_insecte_fin(UListe *colonie, Unite *new_insecte);
+
+
+/**
+ * @brief Effectue l'ajout d'une unite(ou colonie) sur la case[ligne][colonne], return 1 succes ou 0 si echec
+ * 
+ * 
+ * @param grille 
+ * @param unite 
+ * @param ligne 
+ * @param colonne 
+ * @return int 
+ */
+int ajoute_unite_case(Grille *grille, Unite *unite, int ligne, int colonne);
+
+
+/**
+ * @brief Effectue la suppression d'une unite d'une Colonie, return 1 succes ou 0 si echec
+ * 
+ * @param colonie 
+ * @param unite 
+ * @param deleted_unite 
+ * @return int 
+ */
+int supprimerUnite(UListe *colonie, Unite *unite, Unite **deleted_unite);
+
+
+int supprime_unite_case(Grille *grille, Unite *unite, int ligne, int colonne);
+
+
+int rss_Abeilles_Colonie(Grille *grille, UListe A_colonie);
+
+
+
+
+
 int ajoute_colonie_fin(UListe *colonie_un, UListe colonie_deux);
 
 

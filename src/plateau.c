@@ -227,31 +227,7 @@ UListe initialisation_frelons(void){
 
 
 
-void liberer_Grille(Grille *grille) {
 
-    UListe abeilleCourante = grille->abeille;
-    while (abeilleCourante != NULL) {
-        UListe suivant = abeilleCourante->vsuiv;
-        free(abeilleCourante);
-        abeilleCourante = suivant;
-    }
-
-    UListe frelonCourant = grille->frelon;
-    while (frelonCourant != NULL) {
-        UListe suivant = frelonCourant->vsuiv;
-        free(frelonCourant);
-        frelonCourant = suivant;
-    }
-
-    for (int i = 0; i < LIGNES; ++i) {
-        for (int j = 0; j < COLONNES; ++j) {
-            free(grille->plateau[i][j].colonie);
-            free(grille->plateau[i][j].occupant);
-        }
-    }
-
-    free(grille);
-}
 
 
 
@@ -286,13 +262,72 @@ Grille *initialiserGrille(void) {
 }
 
 
+// liberer toute la memoire alloue
+void liberer_Grille(Grille *grille) {
 
+    UListe abeilleCourante = grille->abeille;
+    while (abeilleCourante != NULL) {
+        UListe suivant = abeilleCourante->vsuiv;
+        free(abeilleCourante);
+        abeilleCourante = suivant;
+    }
+
+    UListe frelonCourant = grille->frelon;
+    while (frelonCourant != NULL) {
+        UListe suivant = frelonCourant->vsuiv;
+        free(frelonCourant);
+        frelonCourant = suivant;
+    }
+
+    for (int i = 0; i < LIGNES; ++i) {
+        for (int j = 0; j < COLONNES; ++j) {
+            free(grille->plateau[i][j].colonie);
+            free(grille->plateau[i][j].occupant);
+        }
+    }
+
+    free(grille);
+}
+
+
+/*************************************************/
+/************** AJOUT / SUPPRESSION **************/
+/*************************************************/
+
+
+int ajoute_colonie_fin(UListe *colonie_un, UListe colonie_deux){
+
+    // On suppose que colonie contient toujours au moins 1 element (Ruche ou Nid)
+    if (! (*colonie_un) ){ // Si colonie_un est vide (par exemple detruite)
+        fprintf(stderr, "Colonie_un est vide! \n");
+        *colonie_un = colonie_deux;
+        return 1; 
+    }
+
+    Unite *curr = *colonie_un; // pas obligatoire, mais c'est plus simple
+
+    // Iteration jusqu'a dernier colonne qui est egale a NULL
+    while (curr) { curr = curr->colsuiv; }
+    curr = colonie_deux;
+
+    colonie_deux->colsuiv = NULL;   // par defaut c'est deja NULL (pas obligatoire)
+    colonie_deux->colprec = curr;    
+
+    return 1;   // l'ajout bien s'est passe
+}
+
+
+// A verifier cette fonction
 int ajoute_insecte_fin(UListe *colonie, Unite *new_insecte){
     // On suppose que colonie contient toujours au moins 1 element (Ruche ou Nid)
 
-    if (! (*colonie)){ fprintf(stderr, "Colonie est vide! \n"); return 0; } // Si colonie est vide
+    // Si colonie est vide, donc insecte ne peut pas etre ajoute...
+    if (! (*colonie)){ 
+        fprintf(stderr, "Colonie est vide! \n");
+        return 0;
+    }
 
-    Unite *curr = *colonie; // ce n'est pas obligatoire, mais c'est plus simple
+    Unite *curr = *colonie;     // ce n'est pas obligatoire, mais c'est plus simple
 
     // Iteration jusqu'a dernier unite qui n'est pas egale a NULL
     while (curr->usuiv != NULL) { curr = curr->usuiv; }
@@ -305,35 +340,176 @@ int ajoute_insecte_fin(UListe *colonie, Unite *new_insecte){
 }
 
 
-int ajoute_colonie_fin(UListe *colonie_un, UListe colonie_deux){
-    // retravailler ici
-    // On suppose que colonie contient toujours au moins 1 element (Ruche ou Nid)
-    if (! (*colonie_un)){ // Si colonie_un est vide (par exemple detruite)
-        fprintf(stderr, "Colonie_un est vide! \n");
-        *colonie_un = colonie_deux;
-        return 1; 
+
+
+
+int ajoute_unite_case(Grille *grille, Unite *unite , int ligne, int colonne){
+    if (grille == NULL || unite == NULL || ligne < 0 || ligne >= LIGNES || colonne < 0 || colonne >= COLONNES) {
+        fprintf(stderr, "Paramètres invalides sur la fonction ajoute_case().\n");
+        return 0;
     }
 
-    Unite *curr_un = *colonie_un; // ce n'est pas obligatoire, mais c'est plus simple
+    Case *caseCourante = &(grille->plateau[ligne][colonne]);
 
-    // Iteration jusqu'a dernier unite qui n'est pas egale a NULL
-    while (curr_un->usuiv != NULL) { curr_un = curr_un->usuiv; }
-    curr_un->colsuiv = colonie_deux;
+    // Par defaut case[ligne][colonne] est vide
 
-    // pour la lisibilite on peut remplacer "curr_un->colsuiv" par "colonie_deux"
-    curr_un->colsuiv->colsuiv = NULL;       // par defaut c'est deja NULL
-    curr_un->colsuiv->colprec = curr_un;    
+    // Ajoute l'unité (ou colonie) à la fin de la case actuelle
+    // On suppose que sur la case on ne peut avoir que la Ruche ou que le Nid (un seul d'entre eux)
 
-    return 1;   // l'ajout bien s'est passe
-}
+    if ( (RUCHE == unite->type || NID == unite->type) && (!caseCourante->colonie) ){
+        caseCourante->colonie = unite;
+        return 1;   // donc l'ajout d'une nouvelle colonie est bien passe (IL FAUT TESTER)
+    } else {    // il existe deja une colonie sur cette case OU unite n'est pas RUCHE/NID
+        return ajoute_insecte_fin(&caseCourante->occupant, unite);
+    }
 
-int suppression_tete_colonie(UListe *colonie, Unite **deleted_insecte){
-    if (! colonie ){ fprintf(stderr, "Colonie est vide! On peut pas supprimer \n"); return 0; }   // Si colonie est vide
-    
-    Unite *curr = *colonie;
-
-}
-
-/* int main(void){
     return 0;
-} */
+}
+
+
+
+int supprimerUnite(UListe *colonie, Unite *unite, Unite **deleted_unite) {
+    if ( (! colonie) || (! unite) ) {
+        fprintf(stderr, "Colonie ou unite est NULL.\n");
+        return 0;
+    }
+
+    UListe curr = *colonie;
+    
+    // On ne verifie pas si unite a supprimer est premiere unite
+    // car premiere unite est la colonie (Ruche/Nid)
+
+    // Recherche de l'unité à supprimer dans la colonie
+    while (curr && curr != unite) { curr = curr->usuiv; }
+
+    // Si l'unité à supprimer n'est pas trouvée dans la colonie
+    if (NULL == curr) {
+        fprintf(stderr, "Unite a supprimer non trouvee dans la colonie.\n");
+        return 0; // Échec
+    }
+
+    if (curr->usuiv) { curr->usuiv->uprec = curr->uprec; }  // si unite suivante existe
+    if (curr->uprec) { curr->uprec->usuiv = curr->usuiv; }  // si unite precedente existe
+
+    *deleted_unite = curr;  // On prend l'address de cet insecte
+
+    return 1; // Succès
+}
+
+
+int supprime_unite_case(Grille *grille, Unite *unite, int ligne, int colonne) {
+    if (grille == NULL || unite == NULL || ligne < 0 || ligne >= LIGNES || colonne < 0 || colonne >= COLONNES) {
+        fprintf(stderr, "Paramètres invalides sur la fonction plateau.c *supprime_unite_case()*.\n");
+        return 0;
+    }
+
+    Case *caseCourante = &(grille->plateau[ligne][colonne]);
+
+    // L'unité à supprimer est la colonie de la case
+    if (caseCourante->colonie == unite) {
+
+        if (unite->colsuiv && unite->colprec) {
+            unite->colprec->colsuiv = unite->colsuiv;
+            unite->colsuiv->colprec = unite->colprec;
+        } else if (unite->colsuiv) {
+            unite->colsuiv->colprec = NULL; // le lien pour la colonie suivante
+            unite->colsuiv = NULL;  // pas obligatoire
+        } else if (unite->colprec){
+            unite->colprec->colsuiv = NULL; // le lien pour la colonie precedente
+            unite->colprec = NULL;  // pas obligatoire
+        } else { // LA VICTOIRE car il ne reste plus de RUCHE/NID - AJOUTER la fonction void victory(void);
+            
+            if (unite->camp == ABEILLES){ printf("FRELONS ONT GAGNE\n"); }
+            else{ printf("ABEILLES ONT GAGNE\n"); }
+            free(unite);
+            return 1;  // Indiquer que les frelons ont gagne
+        }
+        free(unite);
+        return 1; // Succès
+    }
+
+    // L'unité à supprimer est dans la liste des occupants de la case
+    UListe listeOccupants = caseCourante->occupant;
+    while (listeOccupants) {
+        if (listeOccupants == unite) {
+
+            if (listeOccupants->uprec) {   // n'est pas premiere unite 
+                listeOccupants->uprec->usuiv = listeOccupants->usuiv;
+            } else {                       // premiere unite
+                caseCourante->occupant = listeOccupants->usuiv;
+            }
+
+            if (listeOccupants->usuiv) {   // ni premiere, ni derniere unite
+                listeOccupants->usuiv->uprec = listeOccupants->uprec;
+            }
+
+            free(listeOccupants);          // derniere unite (tous les liens sont supprimes)
+            return 1;
+        }
+        listeOccupants = listeOccupants->usuiv;     // Iteration
+    }
+
+    // L'unité n'a pas été trouvée liste des occupants et l'unité n'est pas egale a colonie
+    fprintf(stderr, "L'unité spécifiée n'est pas présente sur la case.\n");
+    return 0; // Échec
+}
+
+
+
+int rss_Abeilles_Colonie(Grille *grille, UListe A_colonie) {
+    if ( (! grille) || (! A_colonie) ) {
+        fprintf(stderr, "Paramètres invalides.\n");
+        return 0;
+    }
+
+    int ressources_recues = 0;
+
+    // Parcourir chaque unité affiliée à la ruche détruite
+    if (A_colonie->usuiv){  // Si la ruche détruite a au moins une abeille
+
+        UListe curr_unite = A_colonie->usuiv;   // car A_colonie est Ruche
+        Unite *unite_suivante = NULL;     // A modifier plus tard
+
+        while (curr_unite) {
+        
+            // N'OUBLIEZ PAS DE LIBERER LA MEMORIE DES UNITES SUR LES CASES (TO DO)
+            switch (curr_unite->type) {
+                case REINE:
+                    ressources_recues += CREINEA; break;
+                case OUVRIERE:
+                    ressources_recues += COUVRIERE; break;
+                case GUERRIERE:
+                    ressources_recues += CGUERRIERE; break;
+                case ESCADRON:
+                    ressources_recues += CESCADRON; break;
+                default:
+                    fprintf(stderr, "Type d'unité non reconnu : %c\n", curr_unite->type);
+                    break;
+            }
+
+            unite_suivante = curr_unite->vsuiv;
+            supprime_unite_case(grille, curr_unite, curr_unite->posx, curr_unite->posy);
+            // Chercher l'uniter actuelle pour la vider de la case ou elle est presente
+            // free(curr_unite);
+
+            curr_unite = unite_suivante;      // iteration
+        }
+
+    }
+
+    // POUR LES TESTS, je modifie pour la lisibilite plus tard
+    (supprime_unite_case(grille, A_colonie, A_colonie->posx, A_colonie->posy)) ? 
+    printf("Colonie : %p est detruite. \n", A_colonie) : 
+    printf("Colonie : %p n'est pas detruite. \n", A_colonie);
+
+    // Quantite total pour ajouter au grille->ressourcesAbeille
+    return ressources_recues;
+}
+
+
+
+
+
+int main(void){
+    return 0;
+}
