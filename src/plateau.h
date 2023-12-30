@@ -244,10 +244,9 @@ int ajoute_unite_case(Grille *grille, Unite *unite, int ligne, int colonne);
  * 
  * @param colonie 
  * @param unite 
- * @param deleted_unite 
  * @return int 
  */
-int supprimerUnite(UListe *colonie, Unite *unite, Unite **deleted_unite);
+int supprimeUnite(UListe *colonie, Unite *unite);
 
 /**
  * @brief Effectue la suppression d'une unite de la case[ligne][colonne], return 1 succes ou 0 si echec
@@ -258,7 +257,7 @@ int supprimerUnite(UListe *colonie, Unite *unite, Unite **deleted_unite);
  * @param colonne 
  * @return int 
  */
-int supprime_unite_case(Grille *grille, Unite *unite, int ligne, int colonne);
+int supprimeUnite_case(Grille *grille, Unite *unite, int ligne, int colonne);
 
 /**
  * @brief Renvoie le nombre de "ressources abeilles" apres la destruction d'une Ruche par les frelons
