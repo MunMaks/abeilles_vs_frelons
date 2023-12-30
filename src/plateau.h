@@ -249,17 +249,25 @@ int ajoute_unite_case(Grille *grille, Unite *unite, int ligne, int colonne);
  */
 int supprimerUnite(UListe *colonie, Unite *unite, Unite **deleted_unite);
 
-
+/**
+ * @brief Effectue la suppression d'une unite de la case[ligne][colonne], return 1 succes ou 0 si echec
+ * 
+ * @param grille 
+ * @param unite 
+ * @param ligne 
+ * @param colonne 
+ * @return int 
+ */
 int supprime_unite_case(Grille *grille, Unite *unite, int ligne, int colonne);
 
-
-int rss_Abeilles_Colonie(Grille *grille, UListe A_colonie);
-
-
-
-
-
-int ajoute_colonie_fin(UListe *colonie_un, UListe colonie_deux);
+/**
+ * @brief Renvoie le nombre de "ressources abeilles" apres la destruction d'une Ruche par les frelons
+ * 
+ * @param grille 
+ * @param A_colonie 
+ * @return int 
+ */
+int detruire_colonie_et_rss_abeilles(Grille *grille, UListe A_colonie);
 
 
 #endif

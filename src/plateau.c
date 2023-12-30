@@ -214,21 +214,9 @@ UListe initialisation_frelons(void){
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*******************************************************/
+/************** LES FONCTIONS pour grille **************/
+/*******************************************************/
 
 
 Grille *initialiserGrille(void) {
@@ -368,37 +356,8 @@ int ajoute_unite_case(Grille *grille, Unite *unite , int ligne, int colonne){
 
 
 
-int supprimerUnite(UListe *colonie, Unite *unite, Unite **deleted_unite) {
-    if ( (! colonie) || (! unite) ) {
-        fprintf(stderr, "Colonie ou unite est NULL.\n");
-        return 0;
-    }
-
-    UListe curr = *colonie;
-    
-    // On ne verifie pas si unite a supprimer est premiere unite
-    // car premiere unite est la colonie (Ruche/Nid)
-
-    // Recherche de l'unité à supprimer dans la colonie
-    while (curr && curr != unite) { curr = curr->usuiv; }
-
-    // Si l'unité à supprimer n'est pas trouvée dans la colonie
-    if (NULL == curr) {
-        fprintf(stderr, "Unite a supprimer non trouvee dans la colonie.\n");
-        return 0; // Échec
-    }
-
-    if (curr->usuiv) { curr->usuiv->uprec = curr->uprec; }  // si unite suivante existe
-    if (curr->uprec) { curr->uprec->usuiv = curr->usuiv; }  // si unite precedente existe
-
-    *deleted_unite = curr;  // On prend l'address de cet insecte
-
-    return 1; // Succès
-}
-
-
 int supprime_unite_case(Grille *grille, Unite *unite, int ligne, int colonne) {
-    if (grille == NULL || unite == NULL || ligne < 0 || ligne >= LIGNES || colonne < 0 || colonne >= COLONNES) {
+    if (!grille || !unite || ligne < 0 || ligne >= LIGNES || colonne < 0 || colonne >= COLONNES) {
         fprintf(stderr, "Paramètres invalides sur la fonction plateau.c *supprime_unite_case()*.\n");
         return 0;
     }
@@ -421,8 +380,8 @@ int supprime_unite_case(Grille *grille, Unite *unite, int ligne, int colonne) {
             
             if (unite->camp == ABEILLES){ printf("FRELONS ONT GAGNE\n"); }
             else{ printf("ABEILLES ONT GAGNE\n"); }
-            free(unite);
-            return 1;  // Indiquer que les frelons ont gagne
+            //free(unite);
+            //return 1;  // Indiquer que les frelons ont gagne
         }
         free(unite);
         return 1; // Succès
@@ -455,8 +414,37 @@ int supprime_unite_case(Grille *grille, Unite *unite, int ligne, int colonne) {
 }
 
 
+int supprimerUnite(UListe *colonie, Unite *unite, Unite **deleted_unite) {
+    if ( (! colonie) || (! unite) ) {
+        fprintf(stderr, "Colonie ou unite est NULL.\n");
+        return 0;
+    }
+    UListe curr = *colonie;
 
-int rss_Abeilles_Colonie(Grille *grille, UListe A_colonie) {
+    // On ne verifie pas si unite a supprimer est premiere unite car premiere unite est la colonie (Ruche/Nid)
+    
+    // On va pas traiter le cas quand unite est RUCHE/NID (c'est une autre fonction)
+
+    while (curr && curr != unite) { curr = curr->usuiv; }   // Recherche de l'unité
+
+    // Si l'unité à supprimer n'est pas trouvée dans la colonie
+    if (NULL == curr) {
+        fprintf(stderr, "Unite a supprimer non trouvee dans la colonie.\n");
+        return 0; // Échec
+    }
+
+    if (curr->usuiv) { curr->usuiv->uprec = curr->uprec; }  // si unite suivante existe
+    if (curr->uprec) { curr->uprec->usuiv = curr->usuiv; }  // si unite precedente existe
+
+    *deleted_unite = curr;  // On prend l'address de cet insecte
+
+    return 1; // Succès
+}
+
+
+
+
+int detruire_colonie_et_rss_abeilles(Grille *grille, UListe A_colonie) {
     if ( (! grille) || (! A_colonie) ) {
         fprintf(stderr, "Paramètres invalides.\n");
         return 0;
