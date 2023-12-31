@@ -332,9 +332,14 @@ int supprimeUnite(UListe *colonie, Unite *unite)   // On supprimes tous les lien
 
 void detruire_colonie(UListe *colonie)
 {
-    if ((! (*colonie) ) || (RUCHE != (*colonie)->camp) || (NID != (*colonie)->camp)) {
-        fprintf(stderr, "Colonie est vide ou ce n'est pas une colonie!\n");
+    if ((! (*colonie) )) {
+        fprintf(stderr, "Colonie est vide\n");
     }
+
+    if ((RUCHE != (*colonie)->camp) || (NID != (*colonie)->camp)){
+        fprintf(stderr, "Ce n'est pas une colonie\n");
+    }
+
     Unite * unite = *colonie;
 
 
@@ -554,6 +559,7 @@ void liberer_des_colonies(UListe *colonie)
     // Si la colonie est unique
     if (!(*colonie)->colsuiv && !(*colonie)->colprec) { 
         detruire_colonie(colonie);
+        return;
     }
 
     Unite *col_Courante = *colonie;
@@ -622,10 +628,15 @@ void afficheColonie(UListe colonie){
 int main(void){
     Grille *grille = initialiserGrille();
     grille->abeille = initialisation_abeilles();
+    grille->frelon = initialisation_frelons();
     fprintf(stderr, "On est la MAIN\n\n");
     afficheColonie(grille->abeille);
-
+    
+    fprintf(stderr, "\n\n");
+    
+    afficheColonie(grille->frelon);
     fprintf(stderr, "AVANT liberer MAIN\n\n");
+    
     liberer_Grille(grille);
 
     fprintf(stderr, "\nla memorie liberee MAIN\n");
