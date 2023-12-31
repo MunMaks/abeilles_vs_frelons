@@ -176,7 +176,7 @@ Unite *initialisation_frelon(void) {
     }
 
     F_Frelon->camp = FRELONS;
-    F_Frelon->type = REINE;
+    F_Frelon->type = FRELON;
     F_Frelon->force = FFRELON;
     F_Frelon->posx = 17, F_Frelon->posy = 12;
     F_Frelon->destx = 0, F_Frelon->desty = 0;
@@ -213,69 +213,6 @@ UListe initialisation_frelons(void){
     return F_Nid;
 }
 
-
-/*******************************************************/
-/************** LES FONCTIONS pour grille **************/
-/*******************************************************/
-
-
-Grille *initialiserGrille(void) {
-
-    Grille *grille = NULL;
-
-    if (NULL == (grille = (Grille *)malloc(sizeof(Grille))) ){
-        fprintf(stderr, "Malloc n'a pas reussi a allouer la memoire pour GRILLE, reessayez.\n");
-        return NULL; 	// exit(EXIT_FAILURE);
-    }
-
-    for (int i = 0; i < LIGNES; ++i) {
-        for (int j = 0; j < COLONNES; ++j) {
-			// Chaque case de plateau est initialisee par defaut NULL
-            grille->plateau[i][j].colonie = NULL;	
-            grille->plateau[i][j].occupant = NULL;
-        }
-    }
-
-    grille->abeille = NULL;     // RUCHE -> Reine -> Guerriere -> Ouvriere
-    grille->frelon = NULL;      // NID -> Reine -> Frelon_un -> Frelon_deux
-
-	grille->plateau[0][0].colonie = grille->abeille;                        // RUCHE
-    grille->plateau[LIGNES - 1][COLONNES - 1].colonie = grille->frelon;     // NID
-
-    grille->tour = 0;   // apres chaque tour on l'incremente
-    grille->ressourcesAbeille = 10;		// par defaut 10
-    grille->ressourcesFrelon = 10;		// par defaut 10
-
-    return grille;
-}
-
-
-// liberer toute la memoire alloue
-void liberer_Grille(Grille *grille) {
-
-    UListe abeilleCourante = grille->abeille;
-    while (abeilleCourante != NULL) {
-        UListe suivant = abeilleCourante->vsuiv;
-        free(abeilleCourante);
-        abeilleCourante = suivant;
-    }
-
-    UListe frelonCourant = grille->frelon;
-    while (frelonCourant != NULL) {
-        UListe suivant = frelonCourant->vsuiv;
-        free(frelonCourant);
-        frelonCourant = suivant;
-    }
-
-    for (int i = 0; i < LIGNES; ++i) {
-        for (int j = 0; j < COLONNES; ++j) {
-            free(grille->plateau[i][j].colonie);
-            free(grille->plateau[i][j].occupant);
-        }
-    }
-
-    free(grille);
-}
 
 
 /*************************************************/
@@ -360,40 +297,69 @@ int ajoute_unite_case(Grille *grille, Unite *unite , int ligne, int colonne){
 // SUPPRESSION
 
 
+
+int supprimeUnite(UListe *colonie, Unite *unite)   // On supprimes tous les liens
+{
+    if ( (! (*colonie)) || (! unite) ) {
+        fprintf(stderr, "Colonie ou unite est NULL.\n");
+        return 0;
+    }
+    UListe curr = *colonie;
+
+    // On ne verifie pas si unite a supprimer est premiere unite car premiere unite est la colonie (Ruche/Nid)
+    
+    while (curr && curr != unite) { curr = curr->usuiv; }   // Recherche de l'unité
+
+    // Si l'unité à supprimer n'est pas trouvée dans la colonie
+    if (! curr ) {
+        fprintf(stderr, "Unite a supprimer non trouvee dans la colonie.\n");
+        return 0;
+    }
+
+    if (curr->usuiv && curr->uprec) {       // milieu
+        curr->usuiv->uprec = curr->uprec; 
+        curr->uprec->usuiv = curr->usuiv;
+    } else if (curr->uprec) {               // fin
+        curr->uprec->usuiv = NULL;
+    } else if (curr->usuiv){                // debut
+        curr->usuiv->uprec = NULL;
+    }
+    return 1;
+}
+
+
+
+
 void detruire_colonie(UListe *colonie)
-{   
+{
     if ((! (*colonie) ) || (RUCHE != (*colonie)->camp) || (NID != (*colonie)->camp)) {
         fprintf(stderr, "Colonie est vide ou ce n'est pas une colonie!\n");
     }
     Unite * unite = *colonie;
 
-    // la suppression des liaisons avec d'autres colonies
-    if (unite->colsuiv && unite->colprec) {
-        unite->colprec->colsuiv = unite->colsuiv;
-        unite->colsuiv->colprec = unite->colprec;
-    } else if (unite->colsuiv) {
-        unite->colsuiv->colprec = NULL; // le lien pour la colonie suivante
-        unite->colsuiv = NULL;  // pas obligatoire
-    } else if (unite->colprec){
-        unite->colprec->colsuiv = NULL; // le lien pour la colonie precedente
-        unite->colprec = NULL;  // pas obligatoire
-    } else { // Une seule colonie a supprimer donc victory()
-        // L'affichage
-        (unite->camp == ABEILLES) ? printf("FRELONS ONT GAGNE\n") : printf("ABEILLES ONT GAGNE\n");
-    }
 
-    if (!( (*colonie)->usuiv) ){
+    // Suppression des liaisons avec d'autres colonies
+    if (unite->colsuiv) { unite->colsuiv->colprec = unite->colprec; }
+
+    if (unite->colprec) { unite->colprec->colsuiv = unite->colsuiv; }
+
+    // Une seule colonie a supprimer donc victory()
+    if (!unite->colsuiv && !unite->colprec) { printf((unite->camp == ABEILLES) ? "FRELONS ONT GAGNE\n" : "ABEILLES ONT GAGNE\n"); }
+
+/*     if (!( (*colonie)->usuiv) ){
         free(colonie);  // colonie n'as pas d'unites
         return;
-    }
+    } */
 
     Unite *curr = (*colonie)->usuiv;
-    //  libere toute la memoire occupée par les unites du milieu (O-O-O devient O-X-O)
-    while (curr->usuiv){ curr = curr->usuiv; free(curr->uprec); }
-
+    // libere toute la memoire occupée par les unites du milieu (O-O-O devient O-X-O)
+    while (curr->usuiv){
+        curr = curr->usuiv;
+        free(curr->uprec);
+    }
     free(curr);     // la fin
-    free(colonie);  // le debut
-    (*colonie) = NULL;  // J'en suis pas sur
+
+    (*colonie) = NULL;  // Le pointeur doit rester non libéré (a gerer dehors de cette fonction)
 }
 
 
@@ -447,34 +413,7 @@ int supprimeUnite_case(Grille *grille, Unite *unite, int ligne, int colonne)
 
 
 
-int supprimeUnite(UListe *colonie, Unite *unite)   // On supprimes tous les liens
-{
-    if ( (! (*colonie)) || (! unite) ) {
-        fprintf(stderr, "Colonie ou unite est NULL.\n");
-        return 0;
-    }
-    UListe curr = *colonie;
 
-    // On ne verifie pas si unite a supprimer est premiere unite car premiere unite est la colonie (Ruche/Nid)
-    
-    while (curr && curr != unite) { curr = curr->usuiv; }   // Recherche de l'unité
-
-    // Si l'unité à supprimer n'est pas trouvée dans la colonie
-    if (! curr ) {
-        fprintf(stderr, "Unite a supprimer non trouvee dans la colonie.\n");
-        return 0;
-    }
-
-    if (curr->usuiv && curr->uprec) {       // milieu
-        curr->usuiv->uprec = curr->uprec; 
-        curr->uprec->usuiv = curr->usuiv;
-    } else if (curr->uprec) {               // fin
-        curr->uprec->usuiv = NULL;
-    } else if (curr->usuiv){                // debut
-        curr->usuiv->uprec = NULL;
-    }
-    return 1;
-}
 
 
 
@@ -571,8 +510,125 @@ int detruire_colonie_et_rss_abeilles(Grille *grille, UListe A_colonie)
 
 
 
+/*******************************************************/
+/************** LES FONCTIONS pour grille **************/
+/*******************************************************/
+
+
+Grille *initialiserGrille(void) {
+
+    Grille *grille = NULL;
+
+    if (NULL == (grille = (Grille *)malloc(sizeof(Grille))) ){
+        fprintf(stderr, "Malloc n'a pas reussi a allouer la memoire pour GRILLE, reessayez.\n");
+        return NULL; 	// exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < LIGNES; ++i) {
+        for (int j = 0; j < COLONNES; ++j) {
+			// Chaque case de plateau est initialisee par defaut NULL
+            grille->plateau[i][j].colonie = NULL;	
+            grille->plateau[i][j].occupant = NULL;
+        }
+    }
+
+    grille->abeille = NULL;     // RUCHE -> Reine -> Guerriere -> Ouvriere
+    grille->frelon = NULL;      // NID -> Reine -> Frelon_un -> Frelon_deux
+
+	grille->plateau[0][0].colonie = grille->abeille;                        // RUCHE
+    grille->plateau[LIGNES - 1][COLONNES - 1].colonie = grille->frelon;     // NID
+
+    grille->tour = 0;   // apres chaque tour on l'incremente
+    grille->ressourcesAbeille = 10;		// par defaut 10
+    grille->ressourcesFrelon = 10;		// par defaut 10
+
+    return grille;
+}
+
+
+
+void liberer_des_colonies(UListe *colonie)
+{
+    if (!(*colonie)){ fprintf(stderr, "Colonie est vide\n"); return; }
+
+    // Si la colonie est unique
+    if (!(*colonie)->colsuiv && !(*colonie)->colprec) { 
+        detruire_colonie(colonie);
+    }
+
+    Unite *col_Courante = *colonie;
+    UListe col_Suivante = (*colonie)->colsuiv;
+
+    while (col_Courante && col_Courante->colsuiv) {
+        col_Suivante = col_Courante->colsuiv;
+        detruire_colonie(&col_Courante);
+        col_Courante = col_Suivante;
+    }
+    detruire_colonie(&col_Courante);    // derniere colonie restante
+    // free(colonie);      // liberer le pointeur mais je pense que c'est pas obligatoire 
+    *colonie = NULL;
+}
+
+
+
+
+// liberer toute la memoire alloue
+void liberer_Grille(Grille *grille) {
+
+    if (!grille->abeille) { 
+        fprintf(stderr, "Il n'y a pas de colonie des abeilles\n"); 
+    }
+    if (!grille->frelon) { 
+        fprintf(stderr, "Il n'y a pas de colonie des frelons\n"); 
+    }
+
+    liberer_des_colonies(&(grille->abeille));   // liberer la colonie des abeilles
+
+    liberer_des_colonies(&(grille->frelon));    // liberer la colonie des frelons
+
+    // On ne libere pas les lists "colonie" et "occupant"
+    // car ce sont des colonies qu'on a vient de libere
+    /* for (int i = 0; i < LIGNES; ++i) {
+        for (int j = 0; j < COLONNES; ++j) {
+            free(&(grille->plateau[i][j]));     // On va liberer la case entiere
+        }
+    } */
+
+    free(grille);
+}
+
+
+
+
+
+
+
+
+void afficheColonie(UListe colonie){
+    if (!colonie){
+        fprintf(stderr, "Colonie est vide\n (Affichage)\n");
+        return;
+    }
+    Unite * curr = colonie;
+    while (curr){
+        printf("l'adress de %c est %p\n", curr->type, curr);
+        curr = curr->usuiv;
+    }
+    fprintf(stderr, "Affichage terminee\n");
+}
+
+
 
 int main(void){
-    printf("Hello\n");
+    Grille *grille = initialiserGrille();
+    grille->abeille = initialisation_abeilles();
+    fprintf(stderr, "On est la MAIN\n\n");
+    afficheColonie(grille->abeille);
+
+    fprintf(stderr, "AVANT liberer MAIN\n\n");
+    liberer_Grille(grille);
+
+    fprintf(stderr, "\nla memorie liberee MAIN\n");
+
     return 0;
 }
