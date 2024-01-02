@@ -213,7 +213,7 @@ Grille *initialiserGrille(void);
  * @param colonie_deux 
  * @return int 
  */
-int ajoute_colonie_fin(UListe *colonie_un, UListe colonie_deux);
+int ajoute_colonie(UListe *colonie_un, UListe colonie_deux);
 
 
 /**
@@ -223,7 +223,7 @@ int ajoute_colonie_fin(UListe *colonie_un, UListe colonie_deux);
  * @param new_insecte 
  * @return int 
  */
-int ajoute_insecte_fin(UListe *colonie, Unite *new_insecte);
+int ajoute_insecte(UListe *colonie, Unite *new_insecte);
 
 
 /**
@@ -268,5 +268,8 @@ int supprimeUnite_case(Grille *grille, Unite *unite, int ligne, int colonne);
  */
 int detruire_colonie_et_rss_abeilles(Grille *grille, UListe A_colonie);
 
+void detruire_colonie(UListe *colonie);
+void liberer_des_colonies(UListe *colonie);
+void afficheColonie(UListe colonie);
 
 #endif
