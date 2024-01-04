@@ -902,7 +902,7 @@ UListe creation_Colonie(Unite **reine, char type, int temps)
 }
 
 
-
+// L'achat d'une unite avec son samp et son type
 int achat_unite(Grille *grille, UListe *colonie, char camp, char type){
     int prix = prix_Unite(camp, type);
     if (camp == ABEILLES && grille->ressourcesAbeille < prix){
@@ -919,9 +919,21 @@ int achat_unite(Grille *grille, UListe *colonie, char camp, char type){
         new_unite = creation_Unite(colonie, type, force, temps);
         if (!new_unite){ fprintf(stderr, "Impossbile de creer une nouvelle unite\n"); return 0; }   // optionel
         
-        grille->ressourcesAbeille -= prix;  // on prend les ressources tel que unite est cree
-        
+        grille->ressourcesAbeille -= prix;  // on diminie les ressources tel que unite est cree
+        // l'ajout a la colonie actuelle
+        if (! ajoute_Insecte(colonie, new_unite) ){
+            fprintf(stderr, "Probleme ajoute unite, apres avoir achete\n");
+            free(new_unite);    // on ne peut pas l'ajouter, donc on la libere
+            return 0;
+        }
+        // l'ajout sur la case necessaire (a la fin)
+        if (! ajoute_Unite_Case(grille, new_unite, new_unite->posx, new_unite->posy) ){
+            fprintf(stderr, "Probleme ajoute unite, apres avoir achete\n");
+            if (new_unite) { free(new_unite); }
+            return 0;
+        }
     }
+    else {} // pareil pour camp FRELON TO DO 4 janvier
     
     return 1;
 }
