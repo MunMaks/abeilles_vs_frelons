@@ -1023,12 +1023,21 @@ int nbr_Unites_totale_Case(Case caseActuelle){
 
 
 
+void recolte_Ouvrierre(Unite **ouvriere){
+    if (!(*ouvriere)){
+        fprintf(stderr, "Ouvriere est NULL, recolte annulee\n");
+        return;
+    }
+    (*ouvriere)->temps = TRECOLTE;
+    (*ouvriere)->toursrestant = TRECOLTE;   // cela diminue avec du temps
+    (*ouvriere)->production = RECOLTE;
+}
 
 
-// TO DO une fonction qui garde l'adresses des reines qui ont deja contruit une Ruche / un Nid
+
+
 // TO DO ajouter l'unite achetee a sa colonie et a la case de sa colonie (OBLIGATOIRE)
 // TO DO supprimer les ressources depensees
-// TO DO fonction RECOLTE du pollen
 
 unsigned int tirage_au_hasard(unsigned int x, unsigned int y) {
     
