@@ -874,17 +874,11 @@ int deplacer_unite(Grille **grille, Unite **unite){
 // Renvoie: "-1" s'il y un problem
 //          "1" si la reine a deja construit une colonie
 //          "0" donc la reine a droit de construire et on l'ajoute dans "reines_liste"
-int reine_deja_contruit(UListe *reines_liste, int *nbr_reines, Unite *reine){
-
-    if ( (*nbr_reines) < 0 || !reine){
+int reine_deja_contruit(UListe *reines_liste, int *nbr_reines, Unite *reine)
+{
+    if ( (*nbr_reines) < 0 || !(reine) ){
         fprintf(stderr, "Il y un problem a la fonction reine_deja_contruit()\n");
         return -1;  // exceptionnellement
-    }
-    if (! (*reines_liste) && !(*nbr_reines) ){
-        *reines_liste = malloc(MAX_REINES * sizeof(Unite *));
-        *reines_liste = reine;
-        ++(*nbr_reines);
-        return 0;
     }
 
     for (int i = 0; i < (*nbr_reines); ++i){
@@ -1004,7 +998,8 @@ int colonie_est_seul(Case caseCourante){
 
 
 // 0 - abeille a gagne, 1 - frelon a gagne
-int bataille(Unite *unite_Abeille, Unite *unite_Frelon){
+int bataille(Unite *unite_Abeille, Unite *unite_Frelon)
+{
     int puissance_A = tirageDe() * unite_Abeille->force;
     int puissance_F = tirageDe() * unite_Frelon->force;
 
@@ -1013,7 +1008,7 @@ int bataille(Unite *unite_Abeille, Unite *unite_Frelon){
         puissance_A = tirageDe() * unite_Abeille->force;
         puissance_F = tirageDe() * unite_Frelon->force;
     }
-
+    // 1:3600 chance que deux fois la valeur des unites soit egale 
     return (puissance_A > puissance_F) ? (0) : (1) ;
 }
 
@@ -1036,18 +1031,26 @@ int bataille(Unite *unite_Abeille, Unite *unite_Frelon){
 
 
 int main(int argc, char *argv[]){
+
     srand( (unsigned int) time(NULL));  // aletoire
     unsigned int x = 0, y = 1;  // On dit ABEILLES - 0, FRELONS - 1
     unsigned int resultat_tirage = tirage_au_hasard(x, y);
     printf("\nResultat du tirage aleatoire: %u\n", resultat_tirage);     // a supprimer plus tard
 
 
+
     // TEST une array des reines qui ont deja contruit une colonie
-/*     Unite *reine = initialisation_reine_abeille();
+    Unite *reine = initialisation_unite_A(REINE, FREINE);
     int nbr_reines = 0;
-    UListe *reines_liste = (UListe *) malloc (MAX_REINES * sizeof(UListe));
-    reine_deja_contruit(reines_liste, &nbr_reines, reine);
-    free(reines_liste); */
+    UListe *reines_liste = (UListe *)malloc(MAX_REINES * sizeof(UListe));
+    if (!reine_deja_contruit(reines_liste, &nbr_reines, reine)){
+        printf("Cette reine construit maintenant la colonie\n");
+    }
+    if (reine_deja_contruit(reines_liste, &nbr_reines, reine)){
+        printf("Cette reine a deja construit la colonie\n");
+    }
+    // En bas il y a free() donc la memoire soit liberer
+
 
     Grille *grille = initialiserGrille();
 
@@ -1067,5 +1070,7 @@ int main(int argc, char *argv[]){
 
     fprintf(stderr, "\nla memorie liberee MAIN\n");
     
+
+    free(reines_liste);     // la liste des reines qui ont deja construit une colonie
     return 0;
 }
