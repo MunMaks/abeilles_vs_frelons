@@ -87,6 +87,9 @@ typedef struct {
 	Unite *colonie; 		// S'il y a une ruche ou un nid sur la case
 	UListe occupant; 		// les autres occupants de la case
 } Case;
+// JE propose de modifier la structure Case au but d'avoir deux pointeurs:
+// pour les abeilles et pour les frelons comme pour grille
+// au but d'eviter de chercher chaque fois quel unite est present et de quel camp
 
 
 // La structure Grille :
@@ -107,20 +110,36 @@ typedef struct {
 
 
 // Affichage d'une colonie souhaitee
-void afficheColonie(UListe colonie)
+void afficheColonie(UListe colonie) // tested
 {
     if (!colonie) { printf("Colonie est vide\n"); return; }
     Unite *curr = colonie;
     while (curr) {
-        printf("le type est %c avec l'adress: %p\n", curr->type, curr);
+        printf("le type est %c avec coordonnees: [%d][%d]\n", curr->type, curr->posx, curr->posy);
         curr = curr->usuiv;
+    }
+}
+
+
+void afficheCase(Case caseCourante) // tested
+{
+    Unite *curr_unite = caseCourante.colonie;
+    if (caseCourante.colonie){
+        printf("Colonie de %c sur case [%d][%d]\n", curr_unite->camp, curr_unite->posx, curr_unite->posy);
+    }
+    if (caseCourante.occupant){
+        curr_unite = caseCourante.occupant;
+        while (curr_unite){
+            printf("Unite : %c sur case [%d][%d]\n", curr_unite->type, curr_unite->posx, curr_unite->posy);
+            curr_unite = curr_unite->vsuiv;
+        }
     }
 }
 
 
 
 // 1 - cette unite existe, 0 sinon
-int uniteExiste(UListe colonie, Unite *unite)
+int uniteExiste(UListe colonie, Unite *unite)   // tested
 {
     if (!colonie || !unite){
         fprintf(stderr, "Colonie est vide ou unite est NULL (exists)\n");
@@ -136,40 +155,49 @@ int uniteExiste(UListe colonie, Unite *unite)
 
 
 // Trouver colonie d'une unite
-UListe trouver_Colonie(Unite *unite)
+UListe trouver_Colonie(Unite *unite)    // tested
 {
     if (!unite){
-        fprintf(stderr, "On peut pas trouver la colonie, unite est vide\n");
+        fprintf(stderr, "On peut pas trouver la colonie, unite n'existe pas\n");
         return NULL;
     }
 
     // Iteration jusqu'a sa colonie 
     // (on suppose que colonie n'a pas d'unites precedentes)
-    while (unite->uprec){ unite = unite->uprec; }
-
+    Unite *curr = unite;
+    while (curr) {
+        if ((curr->type == RUCHE || curr->type == NID)){
+            return curr;
+        }
+        curr = curr->uprec;
+    }
+    fprintf(stderr, "On n'a pas trouve COLONIE\n");
     // "operateur ternaire" autrement dit si colonie donc on la retourne, NULL sinon
-    return (unite->camp == RUCHE || unite->camp == NID) ? unite : NULL;
+    return NULL;
 }
 
 
-int case_Est_Vide(Case caseCourante){
 
+int case_Est_Vide(Case caseCourante)    // tested
+{
     // Operateur ternaire, s'il n'y ni colonie ni unites sur la case courante
     return ( !(caseCourante.colonie) && !(caseCourante.occupant) ) ? (1) : (0) ;
 }
 
 
 
-int prix_Unite(char camp, char type){
+int prix_Unite(char camp, char type)    // tested
+{
+    // Je veux eviter le cas avec (FRELONS, ESCADRON)
     int prix = 0;
     switch (type) {
-        case RUCHE: prix = CRUCHE; break;
-        case NID: prix = CNID; break;
+        case RUCHE: prix = (camp == ABEILLES) ? CRUCHE : -1 ; break;
+        case NID: prix = (camp == FRELONS)? CNID : -1; break;
         case REINE: prix = (camp == ABEILLES) ? CREINEA : CREINEF; break;
-        case GUERRIERE: prix = CGUERRIERE; break;
-        case ESCADRON: prix = CESCADRON; break;
-        case OUVRIERE: prix = COUVRIERE; break;
-        case FRELON: prix = CFRELON; break;
+        case GUERRIERE: prix = (camp == ABEILLES) ? CGUERRIERE : -1 ; break;
+        case ESCADRON: prix = (camp == ABEILLES) ? CESCADRON : -1 ; break;
+        case OUVRIERE: prix = (camp == ABEILLES) ? COUVRIERE : -1 ; break;
+        case FRELON: prix = (camp == FRELONS) ? CFRELON : -1; break;
 
         default: fprintf(stderr, "Unite n'existe pas, reessayez"); break;
     }
@@ -177,7 +205,8 @@ int prix_Unite(char camp, char type){
 }
 
 
-int force_Unite(char type){
+int force_Unite(char type)  // tested
+{
     int force = 0;
     switch (type) {
         case RUCHE: force = 0; break;
@@ -194,16 +223,19 @@ int force_Unite(char type){
 }
 
 
-int temps_Unite(char camp, char type){
+
+int temps_Unite(char camp, char type)   // tested
+{
+    // Je veux eviter le cas avec (ABEILLES, NID)
     int temps = 0;
     switch (type) {
-        case RUCHE: temps = 0; break;
-        case NID: temps = 0; break;
+        case RUCHE: temps = (camp == ABEILLES) ? 0 : -1; break;
+        case NID: temps = (camp == FRELONS) ? 0 : -1; break;
         case REINE: temps = (camp == ABEILLES) ? (TREINEA) : (TREINEF); break;
-        case GUERRIERE: temps = TGUERRIERE; break;
-        case ESCADRON: temps = TESCADRON; break;
-        case OUVRIERE: temps = TOUVRIERE; break;    // plus tard TRECOLTE
-        case FRELON: temps = TFRELON; break;
+        case GUERRIERE: temps = (camp == ABEILLES) ? TGUERRIERE : -1 ; break;
+        case ESCADRON: temps = (camp == ABEILLES)? TESCADRON : -1 ; break;
+        case OUVRIERE: temps = (camp == ABEILLES) ? TOUVRIERE : -1; break;    // plus tard TRECOLTE
+        case FRELON: temps = (camp == FRELONS) ? TFRELON : -1; break;
 
         default: fprintf(stderr, "Unite n'existe pas, reessayez"); break;
     }
@@ -211,14 +243,18 @@ int temps_Unite(char camp, char type){
 }
 
 
-unsigned int tirage_au_hasard(unsigned int x, unsigned int y) {
-    
+unsigned int tirage_au_hasard(unsigned int x, unsigned int y)   // tested
+{
     unsigned int resultat = x + (rand() % (y - x + 1));
-
     return resultat;
 }
 
-int tirageDe(void) { return rand() % 60 + 1; }
+int tirageDe(void)  // tested
+{
+    // D'apres PDF sur e-learning:
+    // L'issue du combat est déterminée par tirage aléatoire d'un dé à 60 faces
+    return rand() % 60 + 1; // entre 0 et 59, avec +1 on aura de 1 a 60 (inclus)
+}
 
 
 
@@ -231,7 +267,7 @@ int tirageDe(void) { return rand() % 60 + 1; }
 // Effectue la suppression de lien entre unite et sa case
 int supprime_Insecte_Case(Unite **unite)
 {
-    if (! (*unite)){
+    if (! (*unite) ){
         fprintf(stderr, "Unite n'existe pas\n");
         return 0;
     }
@@ -240,6 +276,7 @@ int supprime_Insecte_Case(Unite **unite)
 
     // unite precedente (sur case)
     if ((*unite)->vprec){ (*unite)->vprec->vsuiv = (*unite)->vsuiv; }
+    
     (*unite)->vprec = NULL, (*unite)->vsuiv = NULL;
     return 1;
 }
@@ -257,13 +294,13 @@ int supprime_Insecte_Col(Unite **unite)
 
     // unite precedente de sa colonie
     if ((*unite)->uprec){ (*unite)->uprec->usuiv = (*unite)->usuiv; }
+
     (*unite)->uprec = NULL, (*unite)->usuiv = NULL;
     return 1;
 }
 
 
-// REECRIRE comment
-// Effectue la suppression de lien entre colonie et d'autres colonies d'une camp
+// Effectue la suppression de lien entre colonie et d'autres colonies
 int supprime_Colonie(UListe *colonie)
 {
     // Si colonie existe
@@ -273,67 +310,71 @@ int supprime_Colonie(UListe *colonie)
     }
     // si colonie suivante existe
     if ((*colonie)->colsuiv) { (*colonie)->colsuiv->colprec = (*colonie)->colprec; }
-    
+
     // si colonie precedente existe
     if ((*colonie)->colprec) { (*colonie)->colprec->colsuiv = (*colonie)->colsuiv; }
+
     (*colonie)->colsuiv = NULL, (*colonie)->colprec = NULL;
     return 1;
 }
 
 
 
-// suppression des liaisons d'une unite (autrement dit colonie ou insecte) sur la case
-int supprime_Unite_Case(Grille **grille, Unite **unite)
+// suppression des liaisons d'une unite (colonie ou insecte) sur la case
+int supprime_Unite_Case(Grille **grille, Unite **unite) // tested
 {
     if (!(*grille) || !(*unite)) {
-        fprintf(stderr, "Parametres invalides: *supprime_Unite_Case()*.\n"); return 0;
+        fprintf(stderr, "Parametres invalides: *supprime_Unite_Case()*.\n");
+        return 0;
     }
 
     Case *caseCourante = &((*grille)->plateau[(*unite)->posx][(*unite)->posy]);
 
     // L'unité à supprimer est la colonie de la case
     if (caseCourante->colonie == (*unite)) {
-/*         if (! supprime_Colonie(unite)){
-            fprintf(stderr, "Suppression des liens de colonie sur la case [%d][%d] n'est pas reussie\n",
-            (*unite)->posx, (*unite)->posy);
-            return 0;
-        } */
         caseCourante->colonie = NULL;
         return 1;   // il faut pas oublier de liberer cette colonie dehors
     }
 
-    if (! uniteExiste(caseCourante->occupant, *unite)){     // Optionel
+/*     if (! uniteExiste(caseCourante->occupant, (*unite) )){     // Si unite n'est pas sur la case
         fprintf(stderr, "L'unite n'est pas presente sur la case.\n"); return 0;
+    } */
+    if (! caseCourante->occupant->vsuiv){    // Case contient un seul insecte
+        caseCourante->occupant = NULL;
     }
-    
+    // Case contient au moins deux insecte et c'est premiere unite a supprimer
+    if ( (caseCourante->occupant == (*unite) ) && (caseCourante->occupant->vsuiv) ){
+        caseCourante->occupant = caseCourante->occupant->vsuiv;
+        return 1;
+    }
     if (! supprime_Insecte_Case(unite)){
-        fprintf(stderr, "On n'a pas reussi a supprimer de lien avec sa colonie\n"); return 0;
+        fprintf(stderr, "On n'a pas reussi a supprimer de lien avec sa colonie\n");
+        return 0;
     }
+    fprintf(stderr, "Il faut debagger\n");
     return 1;
 }
 
 
 
 void detruire_Unite(Unite **unite)   // On supprime tous les liens et libere la memoire d'une unite
-{
+{   
     if (! (*unite) ) {
         fprintf(stderr, "Unite est NULL.\n");
         return;
     }
-
-    // La connexion avec sa colonie
     if (! supprime_Insecte_Col(unite)){
         fprintf(stderr, "On n'a pas reussi a supprimer de lien d'une unite avec sa colonie\n");
         return;
     }
-
+    
     if (! supprime_Insecte_Case(unite)){
         fprintf(stderr, "On n'a pas reussi a supprimer de lien d'une unite sur sa case\n");
         return;
     }
 
     // DISCUTABLE
-    free(unite);    // unite a supprimer
+    free(*unite);    // unite a supprimer
 }
 
 
@@ -353,7 +394,7 @@ void detruire_Colonie(Grille **grille, UListe *colonie)
 
     if (!( (*colonie)->usuiv) ){
         fprintf(stderr, "Colonie n'as pas d'unites\n");
-        free(colonie);      // colonie n'as pas d'unites
+        free(*colonie);      // colonie n'as pas d'unites
         *colonie = NULL;
         return;
     }
@@ -486,7 +527,7 @@ int ajoute_Insecte(UListe *colonie, Unite *new_insecte)
 
 
 int ajoute_Unite_Case(Grille **grille, Unite **unite , int ligne, int colonne)
-{
+{   // TESTED
     if (!(*grille) || !(*unite) || ligne < 0 || ligne >= LIGNES || colonne < 0 || colonne >= COLONNES) {
         fprintf(stderr, "Paramètres invalides sur la fonction ajoute_case().\n");
         return 0;
@@ -719,22 +760,25 @@ void liberer_Grille(Grille **grille)
 }
 
 
-
-
-Unite *creation_Unite(UListe* colonie, char type, int force, int temps){
+Unite *creation_Unite(UListe* colonie, char type, int force, int temps, int posx, int posy) // TESTED
+{
+    if (! (*colonie) ){
+        fprintf(stderr, "Colonie est vide");
+        return NULL;
+    }
     Unite *new_unite = NULL;
     if (NULL == (new_unite = (Unite *)malloc(sizeof(Unite)))){
-        fprintf(stderr, "Unite n'est pas cree, malloc ...\n");
+        fprintf(stderr, "Unite n'a pas ete cree, malloc ...\n");
         return NULL;
     }
     new_unite->camp = (*colonie)->camp;
     new_unite->type = type;
     new_unite->force = force;
-    new_unite->posx = (*colonie)->posx, new_unite->posy = (*colonie)->posy;
+    new_unite->posx = posx, new_unite->posy = posy;
     new_unite->destx = 0, new_unite->desty = 0;     // pour l'instant elle bouge pas
     new_unite->production = '0';
-    new_unite->temps = temps;
-    new_unite->toursrestant = temps;    // avec du temps cela decremente
+    new_unite->temps = 0;
+    new_unite->toursrestant = 0;    // avec du temps cela decremente
 
     // avant d'affiler il faut que (*colonie)->toursrestant soit 0
     new_unite->usuiv = NULL, new_unite->uprec = NULL;   
@@ -749,7 +793,7 @@ Unite *creation_Unite(UListe* colonie, char type, int force, int temps){
 
 
 
-UListe creation_Colonie(Unite **reine, char type, int temps)
+UListe creation_Colonie(Unite **reine, char type, int temps, int posx, int posy)
 {
     // C'est impossible, mais pour etre sur.
     if (!(*reine)){ fprintf(stderr, "Reine n'existe pas\n"); return NULL; }
@@ -762,7 +806,7 @@ UListe creation_Colonie(Unite **reine, char type, int temps)
     new_colonie->camp = (*reine)->camp;
     new_colonie->type = type;
     new_colonie->force = 0;
-    new_colonie->posx = (*reine)->posx, new_colonie->posy = (*reine)->posy;
+    new_colonie->posx = posx, new_colonie->posy = posy;
     new_colonie->destx = 0, new_colonie->desty = 0;     // elle bouge pas
     new_colonie->production = '0';      // quel type d'unite est en train d'etre produit
     new_colonie->temps = 0;
@@ -791,27 +835,27 @@ UListe creation_Colonie(Unite **reine, char type, int temps)
 
 
 // L'achat d'une unite avec son samp et son type
-int achat_unite(Grille **grille, UListe *colonie, Unite **ptr_unite, char camp, char type){
+int achat_Unite(Grille **grille, UListe *colonie, Unite **ptr_unite, char type){
 
     if (!(*colonie)->toursrestant){     // si toursrestant n'est pas egale a 0
         fprintf(stderr, "Creation interdite, l'unite est deja en production\n");
         return 0;
     }
 
-    int prix = prix_Unite(camp, type);
-    if (camp == ABEILLES && (*grille)->ressourcesAbeille < prix){          // pour les abeilles
+    int prix = prix_Unite((*colonie)->camp, type);
+    if ( (*colonie)->camp == ABEILLES && (*grille)->ressourcesAbeille < prix){          // pour les abeilles
         fprintf(stderr, "Pas assez de ressources pour acheter une unite des abeilles\n");
         return 0;
-    } else if (camp == FRELONS && (*grille)->ressourcesFrelon < prix){     // pour les frelons
+    } else if ( (*colonie)->camp == FRELONS && (*grille)->ressourcesFrelon < prix){     // pour les frelons
         fprintf(stderr, "Pas assez de ressources pour acheter une unite des frelons\n");
         return 0;
     }
 
     int force = force_Unite(type);
-    int temps = temps_Unite(camp, type);
+    int temps = temps_Unite((*colonie)->camp, type);
     
     Unite *new_unite = NULL;
-    new_unite = creation_Unite(colonie, type, force, temps);
+    new_unite = creation_Unite(colonie, type, force, temps, (*colonie)->posx, (*colonie)->posy);
     (*colonie)->production = type;      // type d'unite en cours de production
     (*colonie)->temps = temps;          // nbr tours totales
     (*colonie)->toursrestant = temps;   // nbr tours restants
@@ -843,6 +887,16 @@ int achat_unite(Grille **grille, UListe *colonie, Unite **ptr_unite, char camp, 
 }
 
 
+
+/* void change_Direction(Unite **unite, int dest_x, int dest_y){
+    if (! (*unite) ){
+        fprintf("Unite n'existe pas, reesayez\n");
+        return;
+    }
+
+}
+
+ */
 
 int deplacer_unite(Grille **grille, Unite **unite){
     if (!(*grille) || !(*unite)){
@@ -1035,12 +1089,11 @@ int main(int argc, char *argv[]){
     srand( (unsigned int) time(NULL));  // aletoire
     unsigned int x = 0, y = 1;  // On dit ABEILLES - 0, FRELONS - 1
     unsigned int resultat_tirage = tirage_au_hasard(x, y);
-    printf("\nResultat du tirage aleatoire: %u\n", resultat_tirage);     // a supprimer plus tard
-
+    printf("\nResultat du tirage aleatoire: %u\n\n", resultat_tirage);     // a supprimer plus tard
 
 
     // TEST une array des reines qui ont deja contruit une colonie
-    Unite *reine = initialisation_unite_A(REINE, FREINE);
+/*     Unite *reine = initialisation_unite_A(REINE, FREINE);
     int nbr_reines = 0;
     UListe *reines_liste = (UListe *)malloc(MAX_REINES * sizeof(UListe));
     if (!reine_deja_contruit(reines_liste, &nbr_reines, reine)){
@@ -1049,7 +1102,9 @@ int main(int argc, char *argv[]){
     if (reine_deja_contruit(reines_liste, &nbr_reines, reine)){
         printf("Cette reine a deja construit la colonie\n");
     }
-    // En bas il y a free() donc la memoire soit liberer
+    free(reines_liste);     // la liste des reines qui ont deja construit une colonie 
+*/
+
 
 
     Grille *grille = initialiserGrille();
@@ -1057,20 +1112,38 @@ int main(int argc, char *argv[]){
     initialisation_abeilles(&grille);
     initialisation_frelons(&grille);
 
+    Unite *escadron = creation_Unite(&(grille->abeille), ESCADRON, FESCADRON, TESCADRON, 1, 1);
+    Unite *reine_test = creation_Unite(&(grille->abeille), REINE, FREINE, TREINEA, 1, 1);
+
+    ajoute_Unite_Case(&grille, &escadron, 1, 1);
+    ajoute_Unite_Case(&grille, &reine_test, 1, 1);
+
+    supprime_Unite_Case(&grille, &escadron);    // IL Y A UN BUG ICI
+    //supprime_Unite_Case(&grille, &reine_test);
+
+    printf("\nApres suppression\n\n");
+    afficheCase(grille->plateau[1][1]);
+
+    detruire_Unite(&escadron);
+    detruire_Unite(&reine_test);
+
+    
+
     // int count = detruire_colonie_et_rss_abeilles(grille, grille->abeille);
     // printf("On a recu: %d \n", count);
     afficheColonie(grille->abeille);
     printf("\n\n");
-    // afficheColonie(grille->frelon);
+    afficheColonie(grille->frelon);
 
     // detruire_colonie(&(grille->abeille));
     // afficheColonie(grille->abeille);
+
+/*     printf("\n\n");
+    afficheCase(grille->plateau[17][11]); */
 
     liberer_Grille(&grille);
 
     fprintf(stderr, "\nla memorie liberee MAIN\n");
     
-
-    free(reines_liste);     // la liste des reines qui ont deja construit une colonie
     return 0;
 }
