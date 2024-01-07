@@ -363,7 +363,8 @@ void detruire_Colonie(Grille **grille, UListe *colonie)
 
     while (curr){
         suiv = curr->usuiv;
-        detruire_Unite(&curr);  // supprimer tous les liaisons possible d'une unite
+        supprime_Insecte_Case(&curr);  // supprimer le lien sur case d'une unite
+        free(curr);
         curr = suiv;
     }
 
@@ -678,22 +679,23 @@ Grille *initialiserGrille(void) {
 
 void liberer_des_colonies(Grille **grille, UListe *colonie)
 {
-    if (!(*grille) || !(*colonie)){ fprintf(stderr, "Colonie / grille est vide\n"); return; }
-
-
-    Unite *col_Courante = *colonie;
-    UListe col_Suivante = NULL;
+    if ( !(*grille) || !(*colonie)){ 
+        fprintf(stderr, "Colonie / grille est vide\n");
+        return;
+    }
     int i = 1;
     char camp = (*colonie)->camp;
 
+    UListe col_Courante = *colonie;
+    UListe col_Suivante = NULL;
     while (col_Courante) {
         col_Suivante = col_Courante->colsuiv;
         detruire_Colonie(grille, &col_Courante);
-        printf("Colonie #%d est detruite, camp: %c\n", i, camp);
+        printf("Colonie #%d est detruite, camp: %c\n", i, camp);    // a supprimer plus tard
         col_Courante = col_Suivante;
         ++i;
     }
-    // free(colonie);      // liberer le pointeur mais je pense que c'est pas obligatoire 
+
     *colonie = NULL;
 }
 
@@ -701,22 +703,18 @@ void liberer_des_colonies(Grille **grille, UListe *colonie)
 
 
 // liberer toute la memoire alloue
-void liberer_Grille(Grille **grille) {
+void liberer_Grille(Grille **grille)
+{
+    if (!(*grille)->frelon) { fprintf(stderr, "Il n'y a pas de colonie des frelons\n"); }
 
-    if (!(*grille)->abeille) {
-        fprintf(stderr, "Il n'y a pas de colonie des abeilles\n");
-    }
-    if (!(*grille)->frelon) {
-        fprintf(stderr, "Il n'y a pas de colonie des frelons\n");
-    }
+    if (!(*grille)->abeille) { fprintf(stderr, "Il n'y a pas de colonie des abeilles\n"); }
 
     liberer_des_colonies(grille, &((*grille)->abeille));   // liberer les colonies des abeilles
 
     liberer_des_colonies(grille, &((*grille)->frelon));    // liberer les colonies des frelons
 
-    // On ne libere pas les lists "colonie" et "occupant" du "Case plateau[ligne][colonne]""
+    // On ne libere pas les lists "colonie" et "occupant" du Case [ligne][colonne]
     // Car ce sont des pointeurs
-
     free(*grille);
 }
 
@@ -1050,7 +1048,6 @@ int main(int argc, char *argv[]){
     UListe *reines_liste = (UListe *) malloc (MAX_REINES * sizeof(UListe));
     reine_deja_contruit(reines_liste, &nbr_reines, reine);
     free(reines_liste); */
-
 
     Grille *grille = initialiserGrille();
 
