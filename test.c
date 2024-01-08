@@ -115,7 +115,7 @@ void afficheColonie(UListe colonie) // tested
     if (!colonie) { printf("Colonie est vide\n"); return; }
     Unite *curr = colonie;
     while (curr) {
-        printf("le type est %c avec coordonnees: [%d][%d]\n", curr->type, curr->posx, curr->posy);
+        printf("le type est %c avec coordonnees [%d][%d] sur l'adress: %p\n", curr->type, curr->posx, curr->posy, (void *)curr);
         curr = curr->usuiv;
     }
 }
@@ -345,14 +345,19 @@ int supprime_Unite_Case(Grille **grille, Unite **unite) // tested
 
     Case *caseCourante = &((*grille)->plateau[(*unite)->posx][(*unite)->posy]);
 
-    // L'unité à supprimer est la colonie de la case
-    if (caseCourante->colonie == (*unite)) {
-        caseCourante->colonie = NULL;
-        return 1;   // il faut pas oublier de liberer cette colonie dehors
+    if (RUCHE == caseCourante->colonie->type || NID == caseCourante->colonie->type){
+        // L'unité à supprimer est la colonie de la case
+        if (caseCourante->colonie == (*unite)) {
+            caseCourante->colonie = NULL;
+            return 1;   // il faut pas oublier de liberer cette colonie dehors
+        }
+        fprintf(stderr, "Colonie existe deja sur cette case, en plus colonie a supprimer n'est pas ici\n");
+        return 0;
     }
 
+
     if (! uniteExiste((*grille)->abeille, (*unite)) ){
-        fprintf(stderr, "Unite n'est pas present sur la case\n");
+        fprintf(stderr, "Unite %c sur l'adress: %p n'est pas present sur la case\n", (*unite)->type, (void *)(*unite));
         return 0;
     }
 
@@ -417,7 +422,8 @@ void detruire_Colonie(Grille **grille, UListe *colonie) //tested
         return;
     }
 
-    Unite *curr = (*colonie)->usuiv;
+    supprime_Unite_Case(grille, colonie);   // la suppression de colonie sur la case
+    Unite *curr = (*colonie);
     Unite *suiv = NULL;
 
     while (curr){
@@ -427,9 +433,7 @@ void detruire_Colonie(Grille **grille, UListe *colonie) //tested
         curr = suiv;
     }
 
-    supprime_Unite_Case(grille, colonie);   // la suppression de colonie sur la case
-    
-    free(*colonie);     // libere la memoire prise par colonie
+    // free(*colonie);     // libere la memoire prise par colonie
     *colonie = NULL;    // a la fin le pointeur doit etre NULL
 }
 
@@ -1186,7 +1190,8 @@ int main(int argc, char *argv[]){
 
     UListe new_col = creation_Colonie(&reine);
     ajoute_Colonie(&(grille->abeille), new_col);
-    //afficheColonie(new_col);
+    ajoute_Unite_Case(&grille, &new_col, 1, 1);
+    afficheColonie(new_col);
 
     // valgrind --leak-check=yes ./test
     // detruire_Colonie(&new_col);
