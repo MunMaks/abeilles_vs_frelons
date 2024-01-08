@@ -14,7 +14,8 @@
 // Les deux camps :
 #define ABEILLES 'A'
 #define FRELONS 'F'
-#define MAX_REINES 10   // la quantite des reines qui on deja construit une colonie
+#define MAX_REINES 21   // la quantite des reines qui on deja construit une colonie
+#define MAX_CREATIONS 20    // liste avec les unites en cours de creation
 
 // Les types d'unites :
 #define REINE 'r'
@@ -77,7 +78,7 @@ typedef struct unite {
 	int temps; 								// nombres de tours total pour cette production
 	int toursrestant; 						// tours restant pour cette production
 	struct unite *usuiv, *uprec;			// liste des unites affiliees a une ruche ou un nid
-	struct unite *colsuiv, *colprec;		// liste des autres ruches ou nids (colonies) du même camp
+	struct unite *colsuiv, *colprec;		// liste des autres ruches ou nids (colonies) du meme camp
 	struct unite *vsuiv, *vprec;			// liste des autres unites sur la meme case
 } Unite, *UListe;
 
@@ -173,6 +174,20 @@ UListe trouver_Colonie(Unite *unite)    // tested
     }
     fprintf(stderr, "On n'a pas trouve COLONIE\n");
     // "operateur ternaire" autrement dit si colonie donc on la retourne, NULL sinon
+    return NULL;
+}
+
+
+Unite *trouver_Reine(UListe colonie){
+    if (!colonie){
+        fprintf(stderr, "Colonie est vide, on ne trouve pas la reine\n");
+        return NULL;
+    }
+    Unite *curr = colonie;
+    while(curr){
+        if (REINE == curr->type) { return curr; }
+        curr = curr->usuiv;
+    }
     return NULL;
 }
 
@@ -779,7 +794,7 @@ Unite *creation_Unite(UListe* colonie, char type, int force, int temps) // TESTE
     new_unite->toursrestant = 0;    // avec du temps cela decremente
 
     // avant d'affiler il faut que (*colonie)->toursrestant soit 0
-    new_unite->usuiv = NULL, new_unite->uprec = NULL;   
+    new_unite->usuiv = (*colonie) , new_unite->uprec = NULL;   
 
     new_unite->colsuiv = NULL, new_unite->colprec = NULL;
 
@@ -791,7 +806,7 @@ Unite *creation_Unite(UListe* colonie, char type, int force, int temps) // TESTE
 
 
 
-UListe creation_Colonie(Unite **reine, char type, int temps)
+UListe creation_Colonie(Unite **reine)    //tested
 {
     // C'est impossible, mais pour etre sur.
     if (!(*reine)){ fprintf(stderr, "Reine n'existe pas\n"); return NULL; }
@@ -802,7 +817,7 @@ UListe creation_Colonie(Unite **reine, char type, int temps)
         return NULL;
     }
     new_colonie->camp = (*reine)->camp;
-    new_colonie->type = type;
+    new_colonie->type = ((*reine)->camp == ABEILLES) ? (RUCHE) : (NID);
     new_colonie->force = 0;
     new_colonie->posx = (*reine)->posx, new_colonie->posy = (*reine)->posy;
     new_colonie->destx = 0, new_colonie->desty = 0;     // elle bouge pas
@@ -833,7 +848,8 @@ UListe creation_Colonie(Unite **reine, char type, int temps)
 
 
 // L'achat d'une unite avec son samp et son type
-int achat_Unite(Grille **grille, UListe *colonie, Unite **ptr_unite, char type){
+int achat_Unite(Grille **grille, UListe *colonie, Unite **ptr_unite, char type) // tested
+{
 
     if ((*colonie)->toursrestant){     // si toursrestant n'est pas egale a 0
         fprintf(stderr, "Creation interdite, l'unite est deja en production\n");
@@ -851,7 +867,9 @@ int achat_Unite(Grille **grille, UListe *colonie, Unite **ptr_unite, char type){
 
     int force = force_Unite(type);
     int temps = temps_Unite((*colonie)->camp, type);
-    
+    // if (type == RUCHE || type == NID){
+    //     creation_Colonie();
+    // }
     Unite *new_unite = creation_Unite(colonie, type, force, temps);
 
     if (!new_unite){ fprintf(stderr, "Impossbile de creer une nouvelle unite\n"); return 0; }   // optionel
@@ -948,6 +966,10 @@ int reine_deja_contruit(UListe *reines_liste, int *nbr_reines, Unite *reine)
 }
 
 
+
+
+
+
 // Quantite totale du type souhaite
 int nbr_Unite_Case(Case caseActuelle, char type){
     int quantite = 0;
@@ -1026,7 +1048,7 @@ int deux_camps_sur_case(Case caseActuelle){
 
     Unite *curr_camp = caseActuelle.occupant;
     while (curr_camp){
-        if (curr_camp->camp != first_camp) { return 1; }    // On a deux camps sur la meme case
+        if (curr_camp->camp != first_camp) { return 1; }    // On a deux camps differents sur la meme case
         curr_camp = curr_camp->vsuiv;
     }
 
@@ -1083,7 +1105,8 @@ int bataille(Unite *unite_Abeille, Unite *unite_Frelon)
 // TO DO ajouter l'unite achetee a sa colonie et a la case de sa colonie (OBLIGATOIRE)
 // TO DO supprimer les ressources depensees
 
-
+// TO DO fonction qui verifie pour une unite le nbr de tours restant pour etre apparaitre
+// TO DO une fonction 
 
 
 int main(int argc, char *argv[]){
@@ -1108,34 +1131,31 @@ int main(int argc, char *argv[]){
     // free(reines_liste);     // la liste des reines qui ont deja construit une colonie 
 
 
+    UListe *listes_unites_en_cours = (UListe *)malloc(MAX_CREATIONS * sizeof(UListe));
+    // une fonction pour lire et diminue tourrestants
 
 
     Grille *grille = initialiserGrille();
 
-    initialisation_abeilles(&grille);
+    initialisation_abeilles(&grille);   // Grille **
     initialisation_frelons(&grille);
 
     // achat_Unite(Grille **grille, UListe *colonie, Unite **ptr_unite, char type)
-    UListe new_col = NULL;
-    achat_Unite(&grille, &(grille->abeille), &new_col, RUCHE);
-
-    printf("RSS des abeilles : %d\n", grille->ressourcesAbeille);
 
 
-    Unite *new_unite = NULL;
-    achat_Unite(&grille, &(grille->abeille), &new_unite, OUVRIERE);
+    Unite *reine = trouver_Reine(grille->abeille);
+    ajoute_Unite_Case(&grille, &reine , 1, 1);
 
+    UListe new_col = creation_Colonie(&reine);
+    ajoute_Colonie(&(grille->abeille), new_col);
+    afficheColonie(new_col);
 
     // valgrind --leak-check=yes ./test
-    detruire_Unite(&new_col);
-    detruire_Unite(&new_unite);
+    // detruire_Colonie(&new_col);
 
     afficheColonie(grille->abeille);
     printf("\n\n");
     afficheColonie(grille->frelon);
-
-    int count = detruire_Colonie_et_rss_abeilles(&grille, &(grille->abeille));
-    printf("On a recu: %d \n", count);
 
     // afficheColonie(grille->abeille);
     // printf("\n\n");
