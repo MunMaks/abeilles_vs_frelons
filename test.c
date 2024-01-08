@@ -14,8 +14,7 @@
 // Les deux camps :
 #define ABEILLES 'A'
 #define FRELONS 'F'
-#define MAX_REINES 21   // la quantite des reines qui on deja construit une colonie
-#define MAX_CREATIONS 20    // liste avec les unites en cours de creation
+#define MAX_REINES 12   // la quantite des reines qui on deja construit une colonie
 
 // Les types d'unites :
 #define REINE 'r'
@@ -27,7 +26,7 @@
 #define NID 'N'
 
 // Pour la recolte de pollen
-#define RECOLTE 'p'
+#define RECOLTE 'P' // preciser dans le rapport
 
 // Les temps necessaires a la production abeilles :
 #define TREINEA 8
@@ -350,6 +349,12 @@ int supprime_Unite_Case(Grille **grille, Unite **unite) // tested
         caseCourante->colonie = NULL;
         return 1;   // il faut pas oublier de liberer cette colonie dehors
     }
+    
+    if (!caseCourante->occupant){
+        fprintf(stderr, "probleme\n");
+        return 0;
+    }
+
     // Case contient un seul insecte
     if (! caseCourante->occupant->vsuiv){
         caseCourante->occupant = NULL;
@@ -772,7 +777,7 @@ void liberer_Grille(Grille **grille)
 }
 
 
-Unite *creation_Unite(Grille **grille, UListe* colonie, char type, int force, int temps) // TESTED
+Unite *creation_Unite(Grille **grille, UListe* colonie, char type) // TESTED
 {
     if (! (*colonie) ){
         fprintf(stderr, "Colonie est vide");
@@ -785,7 +790,7 @@ Unite *creation_Unite(Grille **grille, UListe* colonie, char type, int force, in
     }
     new_unite->camp = (*colonie)->camp;
     new_unite->type = type;
-    new_unite->force = force;
+    new_unite->force = force_Unite(type);
     new_unite->posx = (*colonie)->posx, new_unite->posy = (*colonie)->posy;
     new_unite->destx = 0, new_unite->desty = 0;     // pour l'instant elle bouge pas
     new_unite->production = '0';
@@ -852,7 +857,7 @@ UListe creation_Colonie(Unite **reine)    //tested
 
 
 // L'achat d'une unite avec son samp et son type
-int achat_Unite(Grille **grille, UListe *colonie, char type, int temps) // tested
+int achat_Unite(Grille **grille, UListe *colonie, char type) // tested
 {
 
     if ((*colonie)->toursrestant){     // si toursrestant n'est pas egale a 0
@@ -871,7 +876,7 @@ int achat_Unite(Grille **grille, UListe *colonie, char type, int temps) // teste
 
     //Unite *new_unite = creation_Unite(colonie, type, force, temps);
 
-
+    int temps = temps_Unite((*colonie)->camp, type);
     (*colonie)->production = type;      // type d'unite en cours de production
     (*colonie)->temps = temps;          // nbr tours totales
     (*colonie)->toursrestant = temps;   // nbr tours restants
@@ -1120,10 +1125,7 @@ void decremente_Tout(Grille **grille)
                     if (curr_unite->type == OUVRIERE){
                         detruire_Unite(&curr_unite);    // ouvriere meurt sans avoir donne rss pour les frelons
                     }
-
-                    int force = force_Unite(curr_unite->type);
-                    int temps = temps_Unite(curr_unite->camp, curr_unite->type);
-                    creation_Unite(grille, &curr_unite, curr_unite->type, force, temps);
+                    creation_Unite(grille, &curr_unite, curr_unite->type);
                     //UListe* colonie, char type, int force, int temps
                 }
                 curr_unite = curr_unite->usuiv;
@@ -1140,9 +1142,7 @@ void decremente_Tout(Grille **grille)
                 if (curr_unite->toursrestant && curr_unite->production != '0') {    // au moins 1
                     curr_unite->toursrestant--;
                 } else if (!curr_unite->toursrestant && curr_unite->production != '0'){
-                    int force = force_Unite(curr_unite->type);
-                    int temps = temps_Unite(curr_unite->camp, curr_unite->type);
-                    creation_Unite(grille, &curr_unite, curr_unite->type, force, temps);
+                    creation_Unite(grille, &curr_unite, curr_unite->type);
                     //UListe* colonie, char type, int force, int temps
                 }
                 curr_unite = curr_unite->usuiv;
