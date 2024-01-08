@@ -386,7 +386,6 @@ void detruire_Unite(Unite **unite)  // tested
         return;
     }
 
-    // DISCUTABLE
     free(*unite);    // unite a supprimer
 }
 
@@ -847,11 +846,9 @@ UListe creation_Colonie(Unite **reine)    //tested
 
     new_colonie->vsuiv = NULL, new_colonie->vprec = NULL;    // Pour les colonie, cela n'est pas necessaire
 
-    // il faut pas oublier grille->plateau[i][j].colonie = new_colonie
-
-    // ajoute_Unite_Case(grille, unite, ligne, colonne) A FAIRE DEHORS
     return new_colonie;
 }
+
 
 
 // L'achat d'une unite avec son samp et son type
@@ -1096,15 +1093,38 @@ int bataille(Unite *unite_Abeille, Unite *unite_Frelon)
 } */
 
 
-void decremente_Tout(Grille *grille)
+
+
+
+
+
+void decremente_Tout(Grille **grille)
 {   // pour les abeilles
-    if (grille->abeille){
-        UListe curr_col = grille->abeille;
+    if (!(*grille)){
+        fprintf(stderr, "Probleme de la grille\n");
+        return;
+    }
+
+    if ((*grille)->abeille){
+        UListe curr_col = (*grille)->abeille;
         while(curr_col){
             Unite *curr_unite = curr_col;
             while (curr_unite){
                 if (curr_unite->toursrestant && curr_unite->production != '0') {    // au moins 1
+                    if (curr_unite->type == OUVRIERE){  // la recolte
+                        (*grille)->ressourcesAbeille++;
+                    }
                     curr_unite->toursrestant--;
+
+                } else if (!curr_unite->toursrestant && curr_unite->production != '0'){
+                    if (curr_unite->type == OUVRIERE){
+                        detruire_Unite(&curr_unite);    // ouvriere meurt sans avoir donne rss pour les frelons
+                    }
+
+                    int force = force_Unite(curr_unite->type);
+                    int temps = temps_Unite(curr_unite->camp, curr_unite->type);
+                    creation_Unite(grille, &curr_unite, curr_unite->type, force, temps);
+                    //UListe* colonie, char type, int force, int temps
                 }
                 curr_unite = curr_unite->usuiv;
             }
@@ -1112,13 +1132,18 @@ void decremente_Tout(Grille *grille)
         }
     }
     // pour les frelons
-    if (grille->frelon){
-        UListe curr_col = grille->frelon;
+    if ((*grille)->frelon){
+        UListe curr_col = (*grille)->frelon;
         while(curr_col){
             Unite *curr_unite = curr_col;
             while (curr_unite){
                 if (curr_unite->toursrestant && curr_unite->production != '0') {    // au moins 1
                     curr_unite->toursrestant--;
+                } else if (!curr_unite->toursrestant && curr_unite->production != '0'){
+                    int force = force_Unite(curr_unite->type);
+                    int temps = temps_Unite(curr_unite->camp, curr_unite->type);
+                    creation_Unite(grille, &curr_unite, curr_unite->type, force, temps);
+                    //UListe* colonie, char type, int force, int temps
                 }
                 curr_unite = curr_unite->usuiv;
             }
