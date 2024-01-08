@@ -145,9 +145,10 @@ int uniteExiste(UListe colonie, Unite *unite)   // tested
         fprintf(stderr, "Colonie est vide ou unite est NULL (exists)\n");
         return 0;
     }
-    while(colonie){
-        if (colonie == unite) { return 1; }
-        colonie = colonie->usuiv;
+    UListe curr = colonie;
+    while(curr){
+        if (curr == unite) { return 1; }
+        curr = curr->usuiv;
     }
     return 0;
 }
@@ -349,14 +350,14 @@ int supprime_Unite_Case(Grille **grille, Unite **unite) // tested
         caseCourante->colonie = NULL;
         return 1;   // il faut pas oublier de liberer cette colonie dehors
     }
-    
-    if (!caseCourante->occupant){
-        fprintf(stderr, "probleme\n");
+
+    if (! uniteExiste((*grille)->abeille, (*unite)) ){
+        fprintf(stderr, "Unite n'est pas present sur la case\n");
         return 0;
     }
 
     // Case contient un seul insecte
-    if (! caseCourante->occupant->vsuiv){
+    if (! (caseCourante->occupant->vsuiv) ){
         caseCourante->occupant = NULL;
         return 1;
     }
@@ -741,17 +742,12 @@ void liberer_des_colonies(Grille **grille, UListe *colonie)
         fprintf(stderr, "Colonie / grille est vide\n");
         return;
     }
-    int i = 1;
-    char camp = (*colonie)->camp;
-
     UListe col_Courante = *colonie;
-    UListe col_Suivante = NULL;
+    UListe col_Suivante = (*colonie)->colsuiv;
     while (col_Courante) {
         col_Suivante = col_Courante->colsuiv;
         detruire_Colonie(grille, &col_Courante);
-        printf("Colonie #%d est detruite, camp: %c\n", i, camp);    // a supprimer plus tard
         col_Courante = col_Suivante;
-        ++i;
     }
 
     *colonie = NULL;
@@ -1098,9 +1094,36 @@ int bataille(Unite *unite_Abeille, Unite *unite_Frelon)
 } */
 
 
+void decremente(Grille **grille, UListe *colonie){
+    if ( !(*grille) || ! (*colonie) ){
+        fprintf(stderr, "Il y a une erreur avec la grille / la colonie decremente()\n");
+        return;
+    }
+    UListe curr_col = *colonie;
+    while (curr_col){
+        Unite *curr_unite = curr_col;
+        while(curr_unite){
 
+                if (curr_unite->toursrestant && curr_unite->production != '0') {            // au moins 1
+                    if (curr_unite->type == OUVRIERE){ (*grille)->ressourcesAbeille++; }    // la recolte
+                    curr_unite->toursrestant--;
+                } 
+                else if (!curr_unite->toursrestant && curr_unite->production != '0'){
+                    
+                    // ouvriere meurt sans avoir donne rss pour les frelons
+                    if (curr_unite->type == OUVRIERE && curr_unite->production == RECOLTE){
+                        detruire_Unite(&curr_unite);
+                    } 
+                    else {    // toursrestant vaut 0 et on cree l'unite
+                        creation_Unite(grille, &curr_unite, curr_unite->production);
+                    }
+                }
 
-
+            curr_unite = curr_unite->usuiv;
+        }
+        curr_col = curr_col->colsuiv;
+    }
+}
 
 
 void decremente_Tout(Grille **grille)
@@ -1109,50 +1132,12 @@ void decremente_Tout(Grille **grille)
         fprintf(stderr, "Probleme de la grille\n");
         return;
     }
+    // decrementer tous les unites necessaires pour les abeilles
+    if ((*grille)->abeille) { decremente(grille, &((*grille)->abeille)); }
 
-    if ((*grille)->abeille){
-        UListe curr_col = (*grille)->abeille;
-        while(curr_col){
-            Unite *curr_unite = curr_col;
-            while (curr_unite){
-                if (curr_unite->toursrestant && curr_unite->production != '0') {    // au moins 1
-                    if (curr_unite->type == OUVRIERE){  // la recolte
-                        (*grille)->ressourcesAbeille++;
-                    }
-                    curr_unite->toursrestant--;
-
-                } else if (!curr_unite->toursrestant && curr_unite->production != '0'){
-                    if (curr_unite->type == OUVRIERE){
-                        detruire_Unite(&curr_unite);    // ouvriere meurt sans avoir donne rss pour les frelons
-                    }
-                    creation_Unite(grille, &curr_unite, curr_unite->type);
-                    //UListe* colonie, char type, int force, int temps
-                }
-                curr_unite = curr_unite->usuiv;
-            }
-            curr_col = curr_col->colsuiv;
-        }
-    }
-    // pour les frelons
-    if ((*grille)->frelon){
-        UListe curr_col = (*grille)->frelon;
-        while(curr_col){
-            Unite *curr_unite = curr_col;
-            while (curr_unite){
-                if (curr_unite->toursrestant && curr_unite->production != '0') {    // au moins 1
-                    curr_unite->toursrestant--;
-                } else if (!curr_unite->toursrestant && curr_unite->production != '0'){
-                    creation_Unite(grille, &curr_unite, curr_unite->type);
-                    //UListe* colonie, char type, int force, int temps
-                }
-                curr_unite = curr_unite->usuiv;
-            }
-            curr_col = curr_col->colsuiv;
-        }
-    }
+    // decrementer tous les unites necessaires pour les frelons
+    if ((*grille)->frelon) { decremente(grille, &((*grille)->frelon)); }
 }
-
-
 
 
 
@@ -1201,7 +1186,7 @@ int main(int argc, char *argv[]){
 
     UListe new_col = creation_Colonie(&reine);
     ajoute_Colonie(&(grille->abeille), new_col);
-    afficheColonie(new_col);
+    //afficheColonie(new_col);
 
     // valgrind --leak-check=yes ./test
     // detruire_Colonie(&new_col);
@@ -1209,10 +1194,6 @@ int main(int argc, char *argv[]){
     afficheColonie(grille->abeille);
     printf("\n\n");
     afficheColonie(grille->frelon);
-
-    // afficheColonie(grille->abeille);
-    // printf("\n\n");
-    // afficheColonie(grille->frelon);
 
     // detruire_colonie(&(grille->abeille));
     // afficheColonie(grille->abeille);
