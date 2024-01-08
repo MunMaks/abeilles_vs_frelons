@@ -773,7 +773,7 @@ void liberer_Grille(Grille **grille)
 }
 
 
-Unite *creation_Unite(UListe* colonie, char type, int force, int temps) // TESTED
+Unite *creation_Unite(Grille **grille, UListe* colonie, char type, int force, int temps) // TESTED
 {
     if (! (*colonie) ){
         fprintf(stderr, "Colonie est vide");
@@ -793,13 +793,16 @@ Unite *creation_Unite(UListe* colonie, char type, int force, int temps) // TESTE
     new_unite->temps = 0;
     new_unite->toursrestant = 0;    // avec du temps cela decremente
 
-    // avant d'affiler il faut que (*colonie)->toursrestant soit 0
-    new_unite->usuiv = (*colonie) , new_unite->uprec = NULL;   
+    // usuiv, uprec
+    if (! ajoute_Insecte(colonie, new_unite)){
+        fprintf(stderr, "On n'a pas reussi a ajouter unite (creation_Unite())\n");
+        return NULL;
+    }
 
     new_unite->colsuiv = NULL, new_unite->colprec = NULL;
 
-    // vsuiv, vprec (dehors de cette fonction)
-    new_unite->vsuiv = NULL, new_unite->vprec = NULL;   
+    // vsuiv, vprec
+    ajoute_Unite_Case(grille, &new_unite, new_unite->posx, new_unite->posy);
 
     return new_unite;
 }
@@ -826,15 +829,19 @@ UListe creation_Colonie(Unite **reine)    //tested
     new_colonie->toursrestant = 0;
 
     UListe colonie_de_reine = trouver_Colonie(*reine);
+
+    // colsuiv, colprec
     if (! ajoute_Colonie(&colonie_de_reine, new_colonie)){  // l'ajout nouvelle colonie avec les autres
         new_colonie->colsuiv = NULL, new_colonie->colprec = NULL;
     }
+
     // on ne peut pas supprimer les liens tel que la reine n'existe pas 
     if (! supprime_Insecte_Col(reine)){
         fprintf(stderr, "Probleme de creation d'une colonie, la reine n'existe pas\n");
         return NULL;
     }
 
+    // On a supprime tous les liens de la reine avec la colonie precedente
     new_colonie->usuiv = *reine, new_colonie->uprec = NULL;
     (*reine)->uprec = new_colonie;
 
@@ -848,7 +855,7 @@ UListe creation_Colonie(Unite **reine)    //tested
 
 
 // L'achat d'une unite avec son samp et son type
-int achat_Unite(Grille **grille, UListe *colonie, Unite **ptr_unite, char type) // tested
+int achat_Unite(Grille **grille, UListe *colonie, char type, int temps) // tested
 {
 
     if ((*colonie)->toursrestant){     // si toursrestant n'est pas egale a 0
@@ -865,14 +872,8 @@ int achat_Unite(Grille **grille, UListe *colonie, Unite **ptr_unite, char type) 
         return 0;
     }
 
-    int force = force_Unite(type);
-    int temps = temps_Unite((*colonie)->camp, type);
-    // if (type == RUCHE || type == NID){
-    //     creation_Colonie();
-    // }
-    Unite *new_unite = creation_Unite(colonie, type, force, temps);
+    //Unite *new_unite = creation_Unite(colonie, type, force, temps);
 
-    if (!new_unite){ fprintf(stderr, "Impossbile de creer une nouvelle unite\n"); return 0; }   // optionel
 
     (*colonie)->production = type;      // type d'unite en cours de production
     (*colonie)->temps = temps;          // nbr tours totales
@@ -882,9 +883,9 @@ int achat_Unite(Grille **grille, UListe *colonie, Unite **ptr_unite, char type) 
     // tel que la colonie est en train de productoin cette unite
     // On va le sauvegarder et tel que colonie finit sa production
     // On va lier cette unite avec sa colonie et cette unite soit sur la case de sa colonie
-    *ptr_unite = new_unite;
 
-    // on diminie les ressources a la fin du tours
+
+    // on diminie les ressources a la fin du tour
     if ( (*colonie)->camp == ABEILLES ){          // pour les abeilles
         (*grille)->ressourcesAbeille -= prix;
     } else if ( (*colonie)->camp == FRELONS ){     // pour les frelons
@@ -918,6 +919,7 @@ int achat_Unite(Grille **grille, UListe *colonie, Unite **ptr_unite, char type) 
 
  */
 
+// n'est plus utile
 int deplacer_unite(Grille **grille, Unite **unite){
     if (!(*grille) || !(*unite)){
         fprintf(stderr, "Impossible, il y a un probleme: grille ou unite a deplacer\n");
@@ -1065,14 +1067,7 @@ int colonie_est_seul(Case caseCourante){
 
 
 
-/*     for (int i = 0; i < LIGNES; ++i){
-        for (int j = 0; j < COLONNES; ++j){
-            Case caseActuelle = grille->plateau[i][j];
-            if (deux_camps_sur_case(caseActuelle)){
-                
-            }
-        }
-    } */
+/*     f */
 
 
 // 0 - abeille a gagne, 1 - frelon a gagne
@@ -1099,6 +1094,42 @@ int bataille(Unite *unite_Abeille, Unite *unite_Frelon)
     if 
 
 } */
+
+
+void decremente_Tout(Grille *grille)
+{   // pour les abeilles
+    if (grille->abeille){
+        UListe curr_col = grille->abeille;
+        while(curr_col){
+            Unite *curr_unite = curr_col;
+            while (curr_unite){
+                if (curr_unite->toursrestant && curr_unite->production != '0') {    // au moins 1
+                    curr_unite->toursrestant--;
+                }
+                curr_unite = curr_unite->usuiv;
+            }
+            curr_col = curr_col->colsuiv;
+        }
+    }
+    // pour les frelons
+    if (grille->frelon){
+        UListe curr_col = grille->frelon;
+        while(curr_col){
+            Unite *curr_unite = curr_col;
+            while (curr_unite){
+                if (curr_unite->toursrestant && curr_unite->production != '0') {    // au moins 1
+                    curr_unite->toursrestant--;
+                }
+                curr_unite = curr_unite->usuiv;
+            }
+            curr_col = curr_col->colsuiv;
+        }
+    }
+}
+
+
+
+
 
 
 
@@ -1130,9 +1161,6 @@ int main(int argc, char *argv[]){
     // free(reine);
     // free(reines_liste);     // la liste des reines qui ont deja construit une colonie 
 
-
-    UListe *listes_unites_en_cours = (UListe *)malloc(MAX_CREATIONS * sizeof(UListe));
-    // une fonction pour lire et diminue tourrestants
 
 
     Grille *grille = initialiserGrille();
