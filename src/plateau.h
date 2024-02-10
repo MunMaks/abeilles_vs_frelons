@@ -1,275 +1,187 @@
 #ifndef __PLATEAU__
 #define __PLATEAU__
 
-#include <stdio.h>
-#include <stdlib.h>
-// #include <MLV/MLV_all.h>
-#include <time.h>
-// #include <math.h>
-#include <string.h>
-
-
-// Dimensions de la grille en nombre de cases (origine en haut a gauche) :
-// début: (0, 0), fin: (17, 11) 
-#define LIGNES 18
-#define COLONNES 12
-
-// Les deux camps :
-#define ABEILLES 'A'
-#define FRELONS 'F'
-
-// Les types d'unites :
-#define REINE 'r'
-#define OUVRIERE 'o'
-#define ESCADRON 'e'
-#define GUERRIERE 'g'
-#define FRELON 'f'
-#define RUCHE 'R'
-#define NID 'N'
-
-// Pour la recolte de pollen
-#define RECOLTE 'p'
-
-// Les temps necessaires a la production abeilles :
-#define TREINEA 8
-#define TOUVRIERE 2
-#define TGUERRIERE 4
-#define TESCADRON 6
-#define TRECOLTE 4
-
-// Les couts necessaires a la production abeilles :
-#define CRUCHE 10
-#define CREINEA 7
-#define COUVRIERE 3
-#define CGUERRIERE 5
-#define CESCADRON 6
-
-
-// Les temps necessaires a la production frelons :
-#define TREINEF 8
-#define TFRELON 5
-
-// Les couts necessaires a la production frelons :
-#define CNID 10
-#define CREINEF 8
-#define CFRELON 3
-
-
-// La force des unites
-#define FREINE 6
-#define FOUVRIERE 1
-#define FGUERRIERE 5
-#define FESCADRON 12
-#define FFRELON 8
-
-
-/********************************************************/
-/************** Les structures pour le jeu **************/
-/********************************************************/
-
-
-// La structure Unite :
-typedef struct unite {
-	char camp; 								// ABEILLES ou FRELONS
-	char type; 								// RUCHE, NID, REINE, OUVRIERE, GUERRIERE, ESCADRON ou FRELON
-	int force; 								// la force de l'unite
-	int posx, posy; 						// position actuelle sur la grille
-	int destx, desty; 						// destination (negatif si immobile)
-	char production; 						// production d'une ruche ou d'un nid et RECOLTE pour la recolte de pollen
-	int temps; 								// nombres de tours total pour cette production
-	int toursrestant; 						// tours restant pour cette production
-	struct unite *usuiv, *uprec;			// liste des unites affiliees a une ruche ou un nid
-	struct unite *colsuiv, *colprec;		// liste des autres ruches ou nids (colonies) du même camp
-	struct unite *vsuiv, *vprec;			// liste des autres unites sur la meme case
-} Unite, *UListe;
-
-
-// La structure Case :
-typedef struct {
-	Unite *colonie; 		// S'il y a une ruche ou un nid sur la case
-	UListe occupant; 		// les autres occupants de la case
-} Case;
-
-
-// La structure Grille :
-typedef struct {
-	Case plateau[LIGNES][COLONNES];
-	UListe abeille, frelon;
-	int tour; 				// Numero du tour
-	int ressourcesAbeille, ressourcesFrelon;
-} Grille;
+#include "ajoute_supp.h"
 
 
 
-/********************************************************/
-/************** LES FONCTIONS pour abeille **************/
-/********************************************************/
+/******************* ABEILLES ********************/
+
 
 /**
- * @brief Initialisation de ruche au debut
+ * @brief Initialisation au debut une unite des abeilles
  * 
+ * @param type 
+ * @param force 
  * @return Unite* 
  */
-Unite *initialisation_ruche(void);
-
-
-/**
- * @brief Initialisation de reine abeille au debut
- * 
- * @return Unite* 
- */
-Unite *initialisation_reine_abeille(void);
-
+Unite* initialisation_unite_A(char type, int force);
 
 /**
- * @brief Initialisation de ouvriere au debut
- * 
- * @return Unite* 
- */
-Unite *initialisation_ouvriere(void);
-
-
-/**
- * @brief Initialisation de guerriere au debut
- * 
- * @return Unite* 
- */
-Unite *initialisation_guerriere(void);
-
-
-/**
- * @brief Initialisation de CAMP ABEILLE
- * 
- * @return UListe 
- */
-UListe initialisation_abeilles(void);
-
-
-/********************************************************/
-/************** LES FONCTIONS pour frelons **************/
-/********************************************************/
-
-/**
- * @brief Initialisation un nid au debut
- * 
- * @return Unite* 
- */
-Unite *initialisation_nid(void);
-
-
-/**
- * @brief Initialisation une reine de frelon au debut
- * 
- * @return Unite* 
- */
-Unite *initialisation_reine_frelon(void);
-
-
-/**
- * @brief Initialisation deux frelons au debut
- * 
- * @return Unite* 
- */
-Unite *initialisation_frelon(void);
-
-
-/**
- * @brief Initialisation de CAMP FRELON
- * 
- * @return UListe 
- */
-UListe initialisation_frelons(void);
-
-
-/*******************************************************/
-/************** LES FONCTIONS pour grille **************/
-/*******************************************************/
-
-
-/**
- * @brief Liberer la memoire du grille
+ * @brief Initialisation au debut des unite des abeilles et la Ruche
  * 
  * @param grille 
  */
-void liberer_Grille(Grille *grille);
+void initialisation_abeilles(Grille **grille);
+
+
+
+/******************** FRELONS ********************/
+
 
 /**
- * @brief Initialisation du plateau au debut
+ * @brief Initialisation au debut une unite des frelons
+ * 
+ * @param type 
+ * @param force 
+ * @return Unite* 
+ */
+Unite* initialisation_unite_F(char type, int force);
+
+/**
+ * @brief Initialisation au debut des unite des frelons et le Nid
+ * 
+ * @param grille 
+ */
+void initialisation_frelons(Grille **grille);
+
+
+
+/******************** GRILLE *********************/
+
+
+/**
+ * @brief Creation de la grille au debut du jeu
  * 
  * @return Grille* 
  */
 Grille *initialiserGrille(void);
 
 
-/*************************************************/
-/************** AJOUT / SUPPRESSION **************/
-/*************************************************/
-
-
 /**
- * @brief Effectue l'ajout d'une colonie a l'autre (reciproquement), return 1 succes ou 0 si echec
+ * @brief Liberer toutes la memoire prise par la grille
  * 
- * @param colonie_un 
- * @param colonie_deux 
- * @return int 
+ * @param grille 
  */
-int ajoute_colonie(UListe *colonie_un, UListe colonie_deux);
+void liberer_Grille(Grille **grille);
 
 
 /**
- * @brief Effectue l'ajout d'un insecte a la fin de la colonie, return 1 succes ou 0 si echec
+ * @brief Creation une unite de type souhaitee
  * 
  * @param colonie 
- * @param new_insecte 
- * @return int 
+ * @param type 
+ * @return Unite* 
  */
-int ajoute_insecte(UListe *colonie, Unite *new_insecte);
+Unite *creation_Unite(UListe *colonie, char type);
 
 
 /**
- * @brief Effectue l'ajout d'une unite(ou colonie) sur la case[ligne][colonne], return 1 succes ou 0 si echec
+ * @brief Creation une colonie de type souhaitee (Ruche / Nid)
  * 
+ * @param reine 
+ * @return UListe 
+ */
+UListe creation_Colonie(Unite **reine);
+
+
+/**
+ * @brief Effectue l'achat d'une nouvelle unite par une colonie
  * 
  * @param grille 
- * @param unite 
- * @param ligne 
- * @param colonne 
+ * @param colonie 
+ * @param type 
  * @return int 
  */
-int ajoute_unite_case(Grille *grille, Unite *unite, int ligne, int colonne);
+int achat_Unite(Grille **grille, UListe *colonie, char type);
 
 
 /**
- * @brief Effectue la suppression d'une unite d'une Colonie, return 1 succes ou 0 si echec
+ * @brief Effectue l'achat d'une nouvelle colonie par une reine
+ * 
+ * @param grille 
+ * @param reine 
+ * @return int 
+ */
+int achat_Colonie(Grille **grille, Unite **reine);
+
+
+/**
+ * @brief // -1: il y un problem, 1 la reine a deja construit, 0 la reine peut construire et on l'ajoute dans "reines_liste"
+ * 
+ * @param reines_liste 
+ * @param nbr_reines 
+ * @param reine 
+ * @return int 
+ */
+int reine_deja_contruit(UListe *reines_liste, int *nbr_reines, Unite *reine);
+
+
+/**
+ * @brief Nombre total d'unites du type souhaite sur la case 
+ * 
+ * @param caseActuelle 
+ * @param type 
+ * @return int 
+ */
+int nbr_Unite_Case(Case caseActuelle, char type);
+
+
+/**
+ * @brief Nombre total d'unites sur la case
+ * 
+ * @param caseActuelle 
+ * @return int 
+ */
+int nbr_Unites_totale_Case(Case caseActuelle);
+
+
+/**
+ * @brief Commence la recolte de pollen par une ouvriere
+ * 
+ * @param ouvriere 
+ */
+void start_recolte_Ouvrierre(Unite **ouvriere);
+
+
+/**
+ * @brief Commence la creation d'une nouvelle colonie par une reine
+ * 
+ * @param reine 
+ */
+void start_creation_Colonie(Unite **reine);
+
+
+/**
+ * @brief Quantite total d'ouvriere qui collectent de pollen
  * 
  * @param colonie 
- * @param unite 
  * @return int 
  */
-int supprimeUnite(UListe *colonie, Unite *unite);
+int nb_recolte(UListe colonie);
+
 
 /**
- * @brief Effectue la suppression d'une unite de la case[ligne][colonne], return 1 succes ou 0 si echec
+ * @brief Effectue l’achat d’une unite en fonction de qui achete et de quel type.
  * 
  * @param grille 
- * @param unite 
- * @param ligne 
- * @param colonne 
- * @return int 
+ * @param type 
+ * @param tour 
  */
-int supprimeUnite_case(Grille *grille, Unite *unite, int ligne, int colonne);
+void ajouter_unite_selon_type(Grille *grille, char type, int tour);
+
 
 /**
- * @brief Renvoie le nombre de "ressources abeilles" apres la destruction d'une Ruche par les frelons
+ * @brief Effectue l’achat d’une colonie en verifiant si la reine a deja constuit la colonie.
+ Si elle peut constuire alors cette fonction effectue l'achat
  * 
  * @param grille 
- * @param A_colonie 
- * @return int 
+ * @param reine 
+ * @param reines_liste 
+ * @param nbr_reines 
+ * @param type 
  */
-int detruire_colonie_et_rss_abeilles(Grille *grille, UListe A_colonie);
+void ajouter_colonie_selon_type(Grille *grille, Unite *reine, UListe *reines_liste, int *nbr_reines, char type);
 
-void detruire_colonie(UListe *colonie);
-void liberer_des_colonies(UListe *colonie);
-void afficheColonie(UListe colonie);
 
 #endif
