@@ -13,7 +13,11 @@ int main(int argc, char *argv[]){
     initialisation_abeilles(&grille);
     initialisation_frelons(&grille);
 
-    UListe *reines_liste = (UListe *)malloc(MAX_REINES * sizeof(UListe));
+    UListe *reines_liste = malloc(MAX_REINES * sizeof(*reines_liste));
+    if (!reines_liste){
+        fprintf(stderr, "Pas de memoire pour la reine\n");
+        return 1;
+    }
     int nbr_reines = 0;
     
     MLV_create_window("Fenetre MLV", "Fenetre", SIZE_X, SIZE_Y);
@@ -79,7 +83,7 @@ int main(int argc, char *argv[]){
         liberer_images(images_frelon, nombre_images_frelon);
 
 
-        if (boutons != NULL) {
+        if (boutons) {
             free(boutons);
         }
 

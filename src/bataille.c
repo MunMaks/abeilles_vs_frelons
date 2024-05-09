@@ -30,7 +30,6 @@ int collision(Case caseActuelle)
 
 int bataille(Unite *unite_Abeille, Unite *unite_Frelon)
 {
-
     int puissance_A = tirageDe() * unite_Abeille->force;
     int puissance_F = tirageDe() * unite_Frelon->force;
 
@@ -42,6 +41,22 @@ int bataille(Unite *unite_Abeille, Unite *unite_Frelon)
     // (1:3600 * 1:3600) chance que deux fois la valeur des unites soit egale
     return (puissance_A > puissance_F) ? (0) : (1) ;
 }
+
+
+/*
+// 0 - abeille gagne
+// 1 - frelon  gagne
+int bataille(int force_abeille, int force_frelon){
+    int puissance_abeille = tirageDe() * force_abeille;
+    int puissance_frelon = tirageDe() * force_frelon;
+
+    if (puissance_abeille == puissance_frelon){
+        puissance_abeille = tirageDe() * force_abeille;
+        puissance_frelon = tirageDe() * force_frelon;
+    }
+    return (puissance_abeille > puissance_F) ? (0) : (1) ;
+}
+*/
 
 
 
@@ -56,7 +71,8 @@ Unite *recherche_unite(Case caseActuelle, char camp)
 
 
 
-int colonie_en_danger(Case caseActuelle){
+int colonie_en_danger(Case caseActuelle)
+{
     if (!caseActuelle.colonie){
         return 0;
     }
