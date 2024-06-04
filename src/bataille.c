@@ -62,11 +62,12 @@ int bataille(int force_abeille, int force_frelon){
 
 Unite *recherche_unite(Case caseActuelle, char camp)
 {
-    Unite *curr = caseActuelle->occupant;
+    Unite *curr = caseActuelle.occupant;
     while (curr) {
         if (curr->camp == camp) { return curr; }
         curr = curr->vsuiv;
     }
+    return NULL;
 }
 
 
