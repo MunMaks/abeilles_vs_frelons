@@ -80,10 +80,10 @@
 typedef struct unite {
 	char camp; 								// ABEILLES ou FRELONS
 	char type; 								// RUCHE, NID, REINE, OUVRIERE, GUERRIERE, ESCADRON ou FRELON
+	char production; 						// production d'une ruche ou d'un nid et RECOLTE pour la recolte de pollen
 	int force; 								// la force de l'unite
 	int posx, posy; 						// position actuelle sur la grille
 	int destx, desty; 						// destination (negatif si immobile)
-	char production; 						// production d'une ruche ou d'un nid et RECOLTE pour la recolte de pollen
 	int temps; 								// nombres de tours total pour cette production
 	int toursrestant; 						// tours restant pour cette production
 	struct unite *usuiv, *uprec;			// liste des unites affiliees a une ruche ou un nid
@@ -241,16 +241,6 @@ void afficheColonie(UListe colonie);
  * @param caseCourante 
  */
 void afficheCase(Case caseCourante);
-
-
-/**
- * @brief Verifie si l'unite cherche existe dans cette colonie
- * 
- * @param colonie 
- * @param unite 
- * @return int 1 oui, 0 non
- */
-int uniteExiste(UListe colonie, Unite *unite);
 
 
 /**

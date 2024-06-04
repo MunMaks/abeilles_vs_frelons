@@ -2,6 +2,32 @@
 
 /* TOUS LES COMMENTAIRES NECESSAIRES SE TROUVES DANS AJOUTE_SUPP.H*/
 
+
+
+/**
+ * @brief Verifie si l'unite cherche existe dans cette caseActuelle
+ * 
+ * @param caseActuelle 
+ * @param unite 
+ * @return int 1 oui, 0 non
+ */
+static int uniteExiste(Case *caseActuelle, Unite *unite)
+{
+    if (!caseActuelle || !unite){
+        fprintf(stderr, "Case actuelle est vide ou unite est NULL (exists)\n");
+        return 0;
+    }
+    UListe curr = caseActuelle->occupant;
+    while (curr){
+        if (curr == unite) { return 1; }
+        curr = curr->usuiv;
+    }
+    return 0;
+}
+
+
+
+
 /***********************************************/
 /***************** SUPPRESSION *****************/
 /***********************************************/
@@ -10,7 +36,7 @@
 
 int supprime_Insecte_Case(Unite **unite)
 {
-    if (! (*unite) ){
+    if ( !(*unite) ){
         fprintf(stderr, "Unite n'existe pas\n");
         return 0;
     }
@@ -19,7 +45,7 @@ int supprime_Insecte_Case(Unite **unite)
 
     // unite precedente (sur case)
     if ((*unite)->vprec){ (*unite)->vprec->vsuiv = (*unite)->vsuiv; }
-    
+
     (*unite)->vprec = NULL, (*unite)->vsuiv = NULL;
     return 1;
 }
@@ -28,7 +54,7 @@ int supprime_Insecte_Case(Unite **unite)
 
 int supprime_Insecte_Col(Unite **unite)
 {
-    if (! (*unite)){
+    if ( !(*unite) ){
         fprintf(stderr, "Unite n'existe pas\n");
         return 0;
     }
@@ -47,7 +73,7 @@ int supprime_Insecte_Col(Unite **unite)
 int supprime_Colonie(UListe *colonie)
 {
     // Si colonie existe
-    if (!(*colonie) ){
+    if ( !(*colonie) ){
         fprintf(stderr, "Colonie n'existe pas, reessayez (supprime_Colonie)\n");
         return 0;
     }
@@ -66,13 +92,15 @@ int supprime_Colonie(UListe *colonie)
 int supprime_Unite_Case(Grille **grille, Unite **unite)
 {
     if (!(*grille) || !(*unite)) {
-        fprintf(stderr, "Parametres invalides: *supprime_Unite_Case()*.\n");
+        fprintf(stderr, "Parametres invalides: `supprime_Unite_Case()`.\n");
         return 0;
     }
 
+    /* vérifier plus tard plateau[posx][posy] */
     Case *caseCourante = &((*grille)->plateau[(*unite)->posx][(*unite)->posy]);
 
-    if (RUCHE == caseCourante->colonie->type || NID == caseCourante->colonie->type){
+    if (NID == caseCourante->colonie->type || 
+        RUCHE == caseCourante->colonie->type){
         // L'unité à supprimer est la colonie de la case
         if (caseCourante->colonie == (*unite)) {
             caseCourante->colonie = NULL;
@@ -82,22 +110,24 @@ int supprime_Unite_Case(Grille **grille, Unite **unite)
     }
 
 
-    if (! uniteExiste((*grille)->abeille, (*unite)) ){
+    if ( !uniteExiste(caseCourante, *unite) ){
         fprintf(stderr, "Unite %c sur l'adress: %p n'est pas present sur la case\n", (*unite)->type, (void *)(*unite));
         return 0;
     }
 
     // Case contient un seul insecte
-    if (! (caseCourante->occupant->vsuiv) ){
+    if ( !(caseCourante->occupant->vsuiv) ){
         caseCourante->occupant = NULL;
         return 1;
     }
+
     // Case contient au moins deux insecte et c'est premiere unite a supprimer
     if ( (caseCourante->occupant == (*unite) ) && (caseCourante->occupant->vsuiv) ){
         caseCourante->occupant = caseCourante->occupant->vsuiv;
         return 1;
     }
-    if (! supprime_Insecte_Case(unite)){
+
+    if ( !supprime_Insecte_Case(unite) ){
         fprintf(stderr, "On n'a pas reussi a supprimer de lien avec sa colonie\n");
         return 0;
     }
@@ -113,24 +143,23 @@ void detruire_Unite(Unite **unite)
         fprintf(stderr, "Unite est NULL.\n");
         return;
     }
-    if (! supprime_Insecte_Col(unite)){
+    if ( !supprime_Insecte_Col(unite)){
         fprintf(stderr, "On n'a pas reussi a supprimer de lien d'une unite avec sa colonie\n");
         return;
     }
     
-    if (! supprime_Insecte_Case(unite)){
+    if ( !supprime_Insecte_Case(unite)){
         fprintf(stderr, "On n'a pas reussi a supprimer de lien d'une unite sur sa case\n");
         return;
     }
-    // liberer la memoire
-    free(*unite);
+    free(*unite);   /* liberer la memoire */
 }
 
 
 
 void detruire_Colonie(Grille **grille, UListe *colonie)
 {
-    if ((! (*grille) || ! (*colonie) )) {
+    if ( (!(*grille) || !(*colonie)) ) {
         fprintf(stderr, "Colonie / grille est vide\n");
         return;
     }
@@ -342,22 +371,6 @@ void afficheCase(Case caseCourante)
             curr_unite = curr_unite->vsuiv;
         }
     }
-}
-
-
-
-int uniteExiste(UListe colonie, Unite *unite)
-{
-    if (!colonie || !unite){
-        fprintf(stderr, "Colonie est vide ou unite est NULL (exists)\n");
-        return 0;
-    }
-    UListe curr = colonie;
-    while(curr){
-        if (curr == unite) { return 1; }
-        curr = curr->usuiv;
-    }
-    return 0;
 }
 
 

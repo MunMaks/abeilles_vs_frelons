@@ -114,7 +114,7 @@ void combat(Grille **grille)
                 (bataille(abeille, frelon)) ? detruire_Unite(&abeille) : detruire_Unite(&frelon);
             }
         }
-    } 
+    }
 }
 
 

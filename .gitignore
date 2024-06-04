@@ -1,7 +1,7 @@
 # Prerequisites
 *.d
 
-#
+# .vscode extensions
 *.json
 
 # Object files
