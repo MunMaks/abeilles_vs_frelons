@@ -99,23 +99,26 @@ int supprime_Unite_Case(Grille **grille, Unite **unite)
     /* vérifier plus tard plateau[posx][posy] */
     Case *caseCourante = &((*grille)->plateau[(*unite)->posx][(*unite)->posy]);
 
-    if (NID == caseCourante->colonie->type || 
-        RUCHE == caseCourante->colonie->type){
-        // L'unité à supprimer est la colonie de la case
-        if (caseCourante->colonie == (*unite)) {
-            caseCourante->colonie = NULL;
-            return 1;
+    if (caseCourante->colonie) {
+        if (NID == caseCourante->colonie->type || RUCHE == caseCourante->colonie->type){
+            // L'unité à supprimer est la colonie de la case
+            if (caseCourante->colonie == (*unite)) {
+                caseCourante->colonie = NULL;
+                return 1;
+            }
+            return 0;
         }
-        return 0;
     }
 
 
+    /*
     if ( !uniteExiste(caseCourante, *unite) ){
         fprintf(stderr, "Unite %c sur l'adress: %p n'est pas present sur la case\n", (*unite)->type, (void *)(*unite));
         return 0;
     }
+    */
 
-    // Case contient un seul insecte
+    /* Case contient un seul insecte */
     if ( !(caseCourante->occupant->vsuiv) ){
         caseCourante->occupant = NULL;
         return 1;
@@ -128,7 +131,7 @@ int supprime_Unite_Case(Grille **grille, Unite **unite)
     }
 
     if ( !supprime_Insecte_Case(unite) ){
-        fprintf(stderr, "On n'a pas reussi a supprimer de lien avec sa colonie\n");
+        fprintf(stderr, "On n'a pas reussi a supprimer de lien sur la case d'une unite\n");
         return 0;
     }
 
@@ -138,7 +141,7 @@ int supprime_Unite_Case(Grille **grille, Unite **unite)
 
 
 void detruire_Unite(Unite **unite)
-{   
+{
     if (! (*unite) ) {
         fprintf(stderr, "Unite est NULL.\n");
         return;
@@ -147,7 +150,6 @@ void detruire_Unite(Unite **unite)
         fprintf(stderr, "On n'a pas reussi a supprimer de lien d'une unite avec sa colonie\n");
         return;
     }
-    
     if ( !supprime_Insecte_Case(unite)){
         fprintf(stderr, "On n'a pas reussi a supprimer de lien d'une unite sur sa case\n");
         return;
@@ -167,15 +169,16 @@ void detruire_Colonie(Grille **grille, UListe *colonie)
     // Suppression des liaisons avec d'autres colonies
     supprime_Colonie(colonie);
 
-    if (!( (*colonie)->usuiv) ){
-        fprintf(stderr, "Colonie n'as pas d'unites\n");
+    supprime_Unite_Case(grille, colonie);   // la suppression de colonie sur la case
+
+    if ( !((*colonie)->usuiv) ){    /* la colonie n'a pas d'unites */
         free(*colonie);
         *colonie = NULL;
         return;
     }
 
-    supprime_Unite_Case(grille, colonie);   // la suppression de colonie sur la case
-    Unite *curr = (*colonie);
+
+    Unite *curr = *colonie;
     Unite *suiv = NULL;
 
     while (curr){
@@ -200,7 +203,7 @@ int detruire_Colonie_et_rss_abeilles(Grille **grille, UListe *A_colonie)
     int ressources_totales = 0;
 
     // operateur ternaire
-    Unite *curr_unite = ((*A_colonie)->type == RUCHE) ? (*A_colonie)->usuiv : (*A_colonie);
+    Unite *curr_unite = ( RUCHE == (*A_colonie)->type) ? (*A_colonie)->usuiv : (*A_colonie);
 
     while (curr_unite) {
         switch (curr_unite->type) {
@@ -216,6 +219,12 @@ int detruire_Colonie_et_rss_abeilles(Grille **grille, UListe *A_colonie)
         }
         curr_unite = curr_unite->usuiv;     // iteration
     }
+    /* il faut vérifier si c'est la colonie sur la quelle la grille est connectee */
+    if ( (*grille)->abeille == A_colonie) {
+        (*grille)->abeille = (A_colonie->colsuiv) ? (A_colonie->colsuiv) : (A_colonie->colprec);
+        return 0;
+    }
+
     detruire_Colonie(grille, A_colonie);    // suppression de toutes les liaisons et libere la memorie
 
     return ressources_totales;
